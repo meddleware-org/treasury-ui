@@ -1,0 +1,141 @@
+/*
+ * dao-ui console — app-local utility classes.
+ *
+ * The structural primitives (panel, toolbar, status bar, data table, stat grid,
+ * badge, activity feed) now come from @meddleware/ui as scoped components
+ * (UiPanel, UiToolbar, UiStatusBar, UiDataTable, UiStatGrid/UiStatRow, UiBadge,
+ * UiActivityFeed/UiActivityItem). What remains here are small text/layout
+ * utilities that are specific to this console's tabs.
+ *
+ * Applied globally via DaoView.vue (so it works when embedded as a library).
+ */
+
+/* ── Shell layout ────────────────────────────────────────────────────────── */
+
+.dao-view {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.dao-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  background: var(--bg);
+}
+
+/* ── Amount cells (monospace, right-aligned) ─────────────────────────────── */
+
+.dao-amount {
+  font-family: var(--mw-font-mono);
+  font-size: 0.8rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.dao-amount--muted {
+  color: var(--muted);
+}
+
+/* ── Two-column overview layout ──────────────────────────────────────────── */
+
+.dao-overview-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .dao-overview-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Proposal progress bar ───────────────────────────────────────────────── */
+
+.dao-progress {
+  height: 6px;
+  background: var(--lift);
+  border: 1px solid var(--border);
+  border-radius: 1px;
+  overflow: hidden;
+  margin: 3px 0;
+}
+
+.dao-progress__fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+/* ── Info tooltip marker ─────────────────────────────────────────────────── */
+
+.dao-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid var(--muted);
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 700;
+  font-style: normal;
+  cursor: help;
+  vertical-align: middle;
+  margin-left: 3px;
+  text-decoration: none;
+}
+
+/* ── Pagination ──────────────────────────────────────────────────────────── */
+
+.dao-pagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+/* ── Misc text utilities ─────────────────────────────────────────────────── */
+
+.dao-mono {
+  font-family: var(--mw-font-mono);
+  font-size: 0.8rem;
+}
+
+.dao-muted {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.dao-section-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 6px;
+}
+
+.dao-notice {
+  padding: 8px 10px;
+  border: 1px solid var(--warning);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  color: var(--warning);
+  font-size: 0.78rem;
+  margin-bottom: 10px;
+}
+
+.dao-placeholder {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
