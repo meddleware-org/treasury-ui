@@ -61,7 +61,12 @@ jobs:
             exit 0
           fi
           VERSION=$(node -p "require('./package.json').version")
-          if npm view "@meddleware/treasury-ui@${VERSION}" version >/dev/null 2>&1; then
+          # Query the registry directly (CDN) rather than `npm view`: a freshly first-published
+          # version can transiently miss `npm view`, which would then attempt a re-publish the
+          # keyless OIDC identity isn't authorised for. A 200 here means the version is live.
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://registry.npmjs.org/@meddleware%2ftreasury-ui/${VERSION}")
+          if [ "$HTTP" = "200" ]; then
             echo "::notice::v${VERSION} already published to npmjs — skipping."
           else
             npm publish
