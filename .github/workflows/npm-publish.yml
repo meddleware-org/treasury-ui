@@ -61,13 +61,22 @@ jobs:
             exit 0
           fi
           VERSION=$(node -p "require('./package.json').version")
-          # Query the registry directly (CDN) rather than `npm view`: a freshly first-published
-          # version can transiently miss `npm view`, which would then attempt a re-publish the
-          # keyless OIDC identity isn't authorised for. A 200 here means the version is live.
-          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://registry.npmjs.org/@meddleware%2ftreasury-ui/${VERSION}")
-          if [ "$HTTP" = "200" ]; then
+          NAME=$(node -p "require('./package.json').name")
+          ENC=$(printf '%s' "$NAME" | sed 's#/#%2f#')
+          # Check the registry directly — `npm view` can transiently miss a freshly
+          # first-published version and then attempt a re-publish. A 200 means it's live.
+          if [ "$(curl -s -o /dev/null -w '%{http_code}' "https://registry.npmjs.org/${ENC}/${VERSION}")" = "200" ]; then
             echo "::notice::v${VERSION} already published to npmjs — skipping."
           else
-            npm publish
+            # Publish, but treat a "version already exists" error as success so a
+            # manually-published version (or a registry race) leaves the job green.
+            set +e; OUT=$(npm publish 2>&1); RC=$?; set -e
+            printf '%s\n' "$OUT"
+            if [ "$RC" -ne 0 ]; then
+              if printf '%s' "$OUT" | grep -qiE 'cannot publish over|previously published|EPUBLISHCONFLICT'; then
+                echo "::notice::v${VERSION} already published — treating as success."
+              else
+                exit "$RC"
+              fi
+            fi
           fi
