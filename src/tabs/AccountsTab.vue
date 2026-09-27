@@ -32,12 +32,12 @@ function formatPrice(mist: bigint): string {
 </script>
 
 <template>
-  <div style="display: flex; flex-direction: column; gap: 10px">
+  <div class="dao-stack">
     <UiPanel title="Sui Treasury Account">
       <p v-if="cfgLoading" class="dao-muted">Loading…</p>
       <p v-else-if="cfgErr" class="dao-muted">{{ cfgErr }}</p>
       <template v-else-if="config">
-        <UiStatGrid style="max-width: 480px">
+        <UiStatGrid class="dao-stat-grid">
           <UiStatRow label="Commission rate">{{ commissionPct }} ({{ config.commissionBps }} bps)</UiStatRow>
           <UiStatRow label="Current balance"><AmountCell :mist="balance" /></UiStatRow>
           <UiStatRow label="Treasury address" align="left">
@@ -61,7 +61,7 @@ function formatPrice(mist: bigint): string {
         <tr v-for="gate in gates" :key="gate.id">
           <td>{{ gate.name }}</td>
           <td class="dao-amount">{{ formatPrice(gate.price) }}</td>
-          <td class="dao-mono" style="font-size: 0.7rem; white-space: nowrap">
+          <td class="dao-mono dao-mono--sm dao-nowrap">
             <CopyableAddress :address="gate.id" label="Copy object ID">
               <ExplorerLink :href="suiExplorerUrl('object', gate.id, NETWORK)" :value="gate.id" />
             </CopyableAddress>

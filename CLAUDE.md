@@ -29,8 +29,10 @@ accounting; DAO is framed as governance.
   are queried.
 - **Shared qt components.** The desktop-console look comes from `@meddleware/ui` (UiPanel,
   UiToolbar/UiToolbarButton, UiStatusBar/UiStatusDot, UiDataTable, UiStatGrid/UiStatRow, UiBadge,
-  UiActivityFeed/UiActivityItem). Only small app-local utility classes remain in `styles/qt.css`.
-  `TabBar.vue` wraps `AppTabNav variant="raised"`.
+  UiActivityFeed/UiActivityItem, `AppTabNav variant="raised"` + `UiTabPanel`, `UiStatusBar` with its
+  network/epoch/refresh props). Only small app-local utility classes remain in `styles/qt.css`.
+- **Semantic markup, no inline styles.** Presentation lives in `qt.css` or scoped `<style>` blocks,
+  never `style=""` attributes; `npm run lint:html` (html-validate) enforces this.
 
 ## Key files
 

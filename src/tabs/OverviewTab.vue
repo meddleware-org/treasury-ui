@@ -42,7 +42,7 @@ const accessesConsumed = computed(() => events.value.filter((e) => e.type === 'A
 <template>
   <div class="dao-overview-cols">
     <!-- Left: treasury summary -->
-    <div style="display: flex; flex-direction: column; gap: 8px">
+    <div class="dao-stack dao-stack--tight">
       <UiPanel title="Treasury Balance">
         <UiStatGrid>
           <UiStatRow label="SUI balance"><AmountCell :mist="balance" /></UiStatRow>
@@ -51,7 +51,7 @@ const accessesConsumed = computed(() => events.value.filter((e) => e.type === 'A
             <CopyableAddress v-if="config?.treasury" :address="config.treasury">
               <ExplorerLink :href="suiExplorerUrl('account', config.treasury, NETWORK)" :value="config.treasury" />
             </CopyableAddress>
-            <span v-else class="dao-mono" style="font-size: 0.7rem">—</span>
+            <span v-else class="dao-mono dao-mono--sm">—</span>
           </UiStatRow>
         </UiStatGrid>
       </UiPanel>
@@ -67,7 +67,7 @@ const accessesConsumed = computed(() => events.value.filter((e) => e.type === 'A
 
     <!-- Right: recent activity -->
     <UiPanel title="Recent Activity">
-      <p v-if="eventsLoading" class="dao-muted" style="margin: 0">Loading events…</p>
+      <p v-if="eventsLoading" class="dao-muted dao-flush">Loading events…</p>
       <UiActivityFeed v-else-if="events.length">
         <UiActivityItem
           v-for="ev in events"

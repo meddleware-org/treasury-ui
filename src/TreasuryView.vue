@@ -11,18 +11,15 @@
 // view is consumed as a library by the dashboard or any other host.
 import './styles/qt.css'
 import { ref, computed } from 'vue'
-import { UiToolbar, UiToolbarButton } from '@meddleware/ui'
-import TabBar from './components/TabBar.vue'
-import StatusBar from './components/StatusBar.vue'
+import { AppTabNav, UiStatusBar, UiTabPanel, UiToolbar, type AppTab } from '@meddleware/ui'
 import OverviewTab from './tabs/OverviewTab.vue'
 import AccountsTab from './tabs/AccountsTab.vue'
 import ActivityTab from './tabs/ActivityTab.vue'
 import { useTreasuryActivity } from './composables/useTreasuryActivity.js'
 import { useEpoch } from './composables/useEpoch.js'
+import { NETWORK } from './config.js'
 
-import type { Tab } from './components/TabBar.vue'
-
-const TABS: Tab[] = [
+const TABS: AppTab[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'accounts', label: 'Accounts' },
   { id: 'activity', label: 'Activity' },
@@ -46,16 +43,14 @@ const { epoch } = useEpoch()
 
 <template>
   <div class="dao-view">
-    <UiToolbar>
-      <UiToolbarButton @click="activeTab = 'overview'">🏦 Meddleware Treasury</UiToolbarButton>
-    </UiToolbar>
+    <UiToolbar :actions="[{ id: 'home', label: '🏦 Meddleware Treasury' }]" @action="activeTab = 'overview'" />
 
-    <TabBar :tabs="TABS" v-model="activeTab" />
+    <AppTabNav v-model="activeTab" :tabs="TABS" id-prefix="treasury" variant="raised" aria-label="Treasury sections" />
 
-    <div class="dao-content">
+    <UiTabPanel id-prefix="treasury" :tab="activeTab" class="dao-content">
       <component :is="activeComponent" />
-    </div>
+    </UiTabPanel>
 
-    <StatusBar :epoch="epoch" :last-refresh="lastRefresh" :error="!!eventsError" />
+    <UiStatusBar :network="NETWORK" :healthy="!eventsError" :epoch="epoch" :last-refresh="lastRefresh" />
   </div>
 </template>
