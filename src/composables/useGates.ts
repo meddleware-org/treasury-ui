@@ -42,7 +42,7 @@ export function useGates() {
 
       // Fetch each Gate shared object referenced by the AdminCap's gate_id.
       const gateList = await Promise.all(
-        (objects ?? []).map(async (o: any): Promise<Gate | null> => {
+        (objects ?? []).map(async (o: { json?: { gate_id?: unknown } | null; object?: { json?: { gate_id?: unknown } | null } | null }): Promise<Gate | null> => {
           const capFields = o?.json ?? o?.object?.json
           const gateId = String(capFields?.gate_id ?? '')
           if (!gateId || gateId === 'undefined') return null
