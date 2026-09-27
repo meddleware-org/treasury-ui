@@ -12,7 +12,7 @@
 
 /* ── Shell layout ────────────────────────────────────────────────────────── */
 
-.dao-view {
+.treasury-view {
   display: flex;
   flex-direction: column;
   min-height: 0;

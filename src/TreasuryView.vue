@@ -42,7 +42,7 @@ const { epoch } = useEpoch()
 </script>
 
 <template>
-  <div class="dao-view">
+  <div class="treasury-view">
     <UiToolbar :actions="[{ id: 'home', label: '🏦 Meddleware Treasury' }]" @action="activeTab = 'overview'" />
 
     <AppTabNav v-model="activeTab" :tabs="TABS" id-prefix="treasury" variant="raised" aria-label="Treasury sections" />
