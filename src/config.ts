@@ -14,7 +14,7 @@ export const RPC_URLS: Record<Network, string> = {
 export const ACCESS_GATE_PACKAGE_ID: Record<Network, string> = {
   testnet:
     import.meta.env.VITE_ACCESS_GATE_PACKAGE_ID_TESTNET ||
-    '0x0bedd0b27d993d3292ca6a5315f7562de8bc0ff3752b445b4c53252c76f2d20d',
+    '0x1a81ca177db039585e575beeeee4759466e55910e936a6733e38dbb65025eea4',
   mainnet: import.meta.env.VITE_ACCESS_GATE_PACKAGE_ID_MAINNET || '',
 }
 
@@ -22,7 +22,7 @@ export const ACCESS_GATE_PACKAGE_ID: Record<Network, string> = {
 export const PLATFORM_CONFIG_ID: Record<Network, string> = {
   testnet:
     import.meta.env.VITE_PLATFORM_CONFIG_ID_TESTNET ||
-    '0x7c5aed0ce7f29a4dfb60657858df31c12410a67098b4bcdd1d8cb1e531be4884',
+    '0xe3b949cabe9a0574c03dfc924fb3f96e6f959f2bb86d053ed6229a241c3a23f7',
   mainnet: import.meta.env.VITE_PLATFORM_CONFIG_ID_MAINNET || '',
 }
 
