@@ -1,9 +1,10 @@
-// Reads the PlatformConfig shared object once on mount and exposes the treasury
-// address + commission rate (bps). Source of truth for the commission model and for
-// whose AdminCaps the gate discovery (useGates) looks up.
-import { ref, onMounted, getCurrentInstance } from 'vue'
+// Reads the PlatformConfig shared object and exposes the treasury address + commission rate (bps).
+// Source of truth for the commission model and for whose AdminCaps the gate discovery looks up.
+import { ref } from 'vue'
+import { fetchPlatformConfig } from '@meddleware/access-gate-client'
 import { getSuiClient } from '../wallet.js'
-import { CONFIG_ID } from '../config.js'
+import { requireDeployment } from '../config.js'
+import { latest, onChainContext } from './chainContext.js'
 
 export interface PlatformConfig {
   treasury: string
@@ -14,29 +15,27 @@ export function usePlatformConfig() {
   const config = ref<PlatformConfig | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const begin = latest()
 
   async function load() {
-    if (!CONFIG_ID) { error.value = 'PlatformConfig ID not configured'; return }
+    const current = begin()
     loading.value = true
     error.value = null
     try {
-      const client = getSuiClient()
-      const res = await client.getObject({ objectId: CONFIG_ID, include: { json: true } })
-      const fields = res.object.json as Record<string, unknown> | null
-      if (!fields) throw new Error('unexpected object structure')
-      config.value = {
-        treasury: String(fields.treasury),
-        commissionBps: Number(fields.commission_bps),
-      }
+      const d = requireDeployment()
+      const c = await fetchPlatformConfig(getSuiClient(), d.platformConfigId, d.originalId)
+      if (!current()) return
+      config.value = { treasury: c.treasury, commissionBps: Number(c.commissionBps) }
     } catch (e) {
+      if (!current()) return
+      config.value = null
       error.value = e instanceof Error ? e.message : String(e)
     } finally {
-      loading.value = false
+      if (current()) loading.value = false
     }
   }
 
-  // Auto-load on mount, but only when used inside a component (skips in unit tests).
-  if (getCurrentInstance()) onMounted(load)
+  onChainContext(load, () => (config.value = null))
 
   return { config, loading, error, reload: load }
 }

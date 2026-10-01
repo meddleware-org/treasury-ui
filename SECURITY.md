@@ -20,10 +20,13 @@ treated as high severity:
    display, never as authority.
 2. **No dynamic HTML sinks.** Treasury/proposal/gate strings sourced from chain (which are
    attacker-influenceable) render as text; URLs are validated.
-3. **No secret is a `VITE_*` value.** Network, RPC, and the access-gate package/config ids are all
-   non-secret public config.
-4. **Graceful degradation.** Event queries fail safe (a pruned/failing event type degrades rather
-   than breaking the page); gate discovery via `AdminCap` ownership is pruning-resistant.
+3. **No secret is a `VITE_*` value.** The network and the optional indexer URL are public config;
+   the access-gate ids come from the published `deployments`, not from the build.
+4. **Graceful degradation.** Event history fails safe (an error is shown, the rest of the page
+   renders; the optional indexer falls back to the full node); gate discovery via `AdminCap`
+   ownership is pruning-resistant, and an unreadable gate is left out rather than failing the list.
+5. **Exact types.** Objects and events are accepted only at the deployment's original id
+   (`@meddleware/access-gate-client`), so a look-alike package cannot feed the console.
 
 > When a future `vault_dao` proposals module adds wallet-signed DAO actions, this read-only model no
 > longer applies and the app must be re-reviewed.

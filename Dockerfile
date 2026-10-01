@@ -5,10 +5,8 @@
 #
 # VITE_* build args (baked into the static bundle at build time):
 #   VITE_NETWORK                              — "testnet" | "mainnet" (default testnet)
-#   VITE_RPC_TESTNET                          — override default Sui gRPC URL (optional)
-#   VITE_RPC_MAINNET                          — override default Sui gRPC URL (optional)
-#   VITE_ACCESS_GATE_PACKAGE_ID_MAINNET       — access_gate package ID on mainnet (optional)
-#   VITE_PLATFORM_CONFIG_ID_MAINNET           — PlatformConfig object ID on mainnet (optional)
+#   VITE_INDEXER_URL                          — read-indexer base URL (optional; display data, falls back to the full node)
+# The access_gate ids come from @meddleware/access-gate-client/deployments, not from build args.
 # Content-Security-Policy served by static-server (verified 2026-09-30: production build loaded in
 # Chromium under this policy with zero violations). script-src stays 'self'; connect-src allows
 # any https origin because RPC, relay, aggregator and Seal key-server hosts are partly operator- or
@@ -24,16 +22,10 @@ RUN npm ci
 COPY . .
 
 ARG VITE_NETWORK=testnet
-ARG VITE_RPC_TESTNET
-ARG VITE_RPC_MAINNET
-ARG VITE_ACCESS_GATE_PACKAGE_ID_MAINNET
-ARG VITE_PLATFORM_CONFIG_ID_MAINNET
+ARG VITE_INDEXER_URL
 
 ENV VITE_NETWORK=${VITE_NETWORK} \
-    VITE_RPC_TESTNET=${VITE_RPC_TESTNET} \
-    VITE_RPC_MAINNET=${VITE_RPC_MAINNET} \
-    VITE_ACCESS_GATE_PACKAGE_ID_MAINNET=${VITE_ACCESS_GATE_PACKAGE_ID_MAINNET} \
-    VITE_PLATFORM_CONFIG_ID_MAINNET=${VITE_PLATFORM_CONFIG_ID_MAINNET}
+    VITE_INDEXER_URL=${VITE_INDEXER_URL}
 
 RUN npm run build
 

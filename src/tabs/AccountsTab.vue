@@ -15,7 +15,7 @@ import {
   UiStatRow,
   UiDataTable,
 } from '@meddleware/ui'
-import { NETWORK } from '../config.js'
+import { explorerNetwork } from '../config.js'
 
 const { config, loading: cfgLoading, error: cfgErr } = usePlatformConfig()
 const { balance } = useTreasury(() => config.value?.treasury ?? null)
@@ -42,7 +42,7 @@ function formatPrice(mist: bigint): string {
           <UiStatRow label="Current balance"><AmountCell :mist="balance" /></UiStatRow>
           <UiStatRow label="Treasury address" align="left">
             <CopyableAddress :address="config.treasury">
-              <ExplorerLink :href="suiExplorerUrl('account', config.treasury, NETWORK)" :value="config.treasury" />
+              <ExplorerLink :href="suiExplorerUrl('account', config.treasury, explorerNetwork)" :value="config.treasury" />
             </CopyableAddress>
           </UiStatRow>
         </UiStatGrid>
@@ -63,7 +63,7 @@ function formatPrice(mist: bigint): string {
           <td class="dao-amount">{{ formatPrice(gate.price) }}</td>
           <td class="dao-mono dao-mono--sm dao-nowrap">
             <CopyableAddress :address="gate.id" label="Copy object ID">
-              <ExplorerLink :href="suiExplorerUrl('object', gate.id, NETWORK)" :value="gate.id" />
+              <ExplorerLink :href="suiExplorerUrl('object', gate.id, explorerNetwork)" :value="gate.id" />
             </CopyableAddress>
           </td>
         </tr>

@@ -65,10 +65,7 @@ jobs:
           cache-to: type=gha,scope=amd64-public,mode=max
           build-args: |
             VITE_NETWORK=${{ vars.VITE_NETWORK || 'testnet' }}
-            VITE_RPC_TESTNET=${{ vars.VITE_RPC_TESTNET }}
-            VITE_RPC_MAINNET=${{ vars.VITE_RPC_MAINNET }}
-            VITE_ACCESS_GATE_PACKAGE_ID_MAINNET=${{ vars.VITE_ACCESS_GATE_PACKAGE_ID_MAINNET }}
-            VITE_PLATFORM_CONFIG_ID_MAINNET=${{ vars.VITE_PLATFORM_CONFIG_ID_MAINNET }}
+            VITE_INDEXER_URL=${{ vars.VITE_INDEXER_URL }}
 
   build-docker-arm64-public:
     name: Docker arm64 (quay.io + Docker Hub)
@@ -107,10 +104,7 @@ jobs:
           cache-to: type=gha,scope=arm64-public,mode=max
           build-args: |
             VITE_NETWORK=${{ vars.VITE_NETWORK || 'testnet' }}
-            VITE_RPC_TESTNET=${{ vars.VITE_RPC_TESTNET }}
-            VITE_RPC_MAINNET=${{ vars.VITE_RPC_MAINNET }}
-            VITE_ACCESS_GATE_PACKAGE_ID_MAINNET=${{ vars.VITE_ACCESS_GATE_PACKAGE_ID_MAINNET }}
-            VITE_PLATFORM_CONFIG_ID_MAINNET=${{ vars.VITE_PLATFORM_CONFIG_ID_MAINNET }}
+            VITE_INDEXER_URL=${{ vars.VITE_INDEXER_URL }}
 
   merge-docker-public:
     name: Merge + sign (quay.io + Docker Hub)
@@ -255,10 +249,7 @@ jobs:
           cache-to: type=gha,scope=amd64-private,mode=max
           build-args: |
             VITE_NETWORK=${{ vars.VITE_NETWORK || 'testnet' }}
-            VITE_RPC_TESTNET=${{ vars.VITE_RPC_TESTNET }}
-            VITE_RPC_MAINNET=${{ vars.VITE_RPC_MAINNET }}
-            VITE_ACCESS_GATE_PACKAGE_ID_MAINNET=${{ vars.VITE_ACCESS_GATE_PACKAGE_ID_MAINNET }}
-            VITE_PLATFORM_CONFIG_ID_MAINNET=${{ vars.VITE_PLATFORM_CONFIG_ID_MAINNET }}
+            VITE_INDEXER_URL=${{ vars.VITE_INDEXER_URL }}
 
   build-docker-arm64-private:
     name: Docker arm64 (self-hosted registry)
@@ -289,10 +280,7 @@ jobs:
           cache-to: type=gha,scope=arm64-private,mode=max
           build-args: |
             VITE_NETWORK=${{ vars.VITE_NETWORK || 'testnet' }}
-            VITE_RPC_TESTNET=${{ vars.VITE_RPC_TESTNET }}
-            VITE_RPC_MAINNET=${{ vars.VITE_RPC_MAINNET }}
-            VITE_ACCESS_GATE_PACKAGE_ID_MAINNET=${{ vars.VITE_ACCESS_GATE_PACKAGE_ID_MAINNET }}
-            VITE_PLATFORM_CONFIG_ID_MAINNET=${{ vars.VITE_PLATFORM_CONFIG_ID_MAINNET }}
+            VITE_INDEXER_URL=${{ vars.VITE_INDEXER_URL }}
 
   merge-docker-private:
     name: Merge (self-hosted registry)

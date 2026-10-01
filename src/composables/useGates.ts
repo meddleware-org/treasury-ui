@@ -1,6 +1,10 @@
-import { ref, onMounted, getCurrentInstance } from 'vue'
+// Gates the platform treasury administers: its AdminCaps (resilient to event pruning), each merged
+// with its Gate. A gate that cannot be read is left out rather than failing the list.
+import { ref } from 'vue'
+import { fetchAdminCaps, fetchGate, fetchPlatformConfig } from '@meddleware/access-gate-client'
 import { getSuiClient } from '../wallet.js'
-import { PACKAGE_ID, CONFIG_ID } from '../config.js'
+import { requireDeployment } from '../config.js'
+import { latest, onChainContext } from './chainContext.js'
 
 export interface Gate {
   id: string
@@ -14,64 +18,34 @@ export function useGates() {
   const gates = ref<Gate[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const begin = latest()
 
   async function load() {
-    if (!PACKAGE_ID || !CONFIG_ID) return
+    const current = begin()
     loading.value = true
     error.value = null
     try {
+      const d = requireDeployment()
       const client = getSuiClient()
-
-      // Get treasury address from PlatformConfig so we know whose AdminCaps to look for.
-      // This is resilient to event pruning (the GateCreatedEvent is pruned on testnet
-      // after ~3 months, making event-based discovery unreliable).
-      const configRes = await client.getObject({ objectId: CONFIG_ID, include: { json: true } })
-      const configFields = configRes.object?.json as Record<string, unknown> | null
-      const treasury = configFields?.treasury as string | undefined
-      if (!treasury) {
-        gates.value = []
-        return
-      }
-
-      // List AdminCap objects owned by treasury — one per gate the treasury controls.
-      const { objects } = await client.listOwnedObjects({
-        owner: treasury,
-        type: `${PACKAGE_ID}::access_gate::AdminCap`,
-        include: { json: true },
-      })
-
-      // Fetch each Gate shared object referenced by the AdminCap's gate_id.
-      const gateList = await Promise.all(
-        (objects ?? []).map(async (o: { json?: { gate_id?: unknown } | null; object?: { json?: { gate_id?: unknown } | null } | null }): Promise<Gate | null> => {
-          const capFields = o?.json ?? o?.object?.json
-          const gateId = String(capFields?.gate_id ?? '')
-          if (!gateId || gateId === 'undefined') return null
-          try {
-            const gateRes = await client.getObject({ objectId: gateId, include: { json: true } })
-            const f = gateRes.object?.json as Record<string, unknown> | null
-            if (!f) return null
-            return {
-              id: gateId,
-              name: String(f.nft_name ?? 'Unnamed Gate'),
-              price: BigInt(String(f.price_mist ?? '0')),
-              paused: Boolean(f.paused),
-              frozen: Boolean(f.frozen),
-            }
-          } catch {
-            return null
-          }
-        }),
+      const { treasury } = await fetchPlatformConfig(client, d.platformConfigId, d.originalId)
+      const caps = await fetchAdminCaps(client, treasury, d.originalId)
+      const settled = await Promise.allSettled(caps.map((c) => fetchGate(client, c.gateId, d.originalId)))
+      if (!current()) return
+      gates.value = settled.flatMap((r) =>
+        r.status === 'fulfilled' && r.value
+          ? [{ id: r.value.gateId, name: r.value.nftName || 'Unnamed Gate', price: r.value.priceMist, paused: r.value.paused, frozen: r.value.frozen }]
+          : [],
       )
-      gates.value = gateList.filter((g): g is Gate => g !== null)
     } catch (e) {
+      if (!current()) return
+      gates.value = []
       error.value = e instanceof Error ? e.message : String(e)
     } finally {
-      loading.value = false
+      if (current()) loading.value = false
     }
   }
 
-  // Auto-load on mount, but only when used inside a component (skips in unit tests).
-  if (getCurrentInstance()) onMounted(load)
+  onChainContext(load, () => (gates.value = []))
 
   return { gates, loading, error, reload: load }
 }

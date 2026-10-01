@@ -17,7 +17,7 @@ import AccountsTab from './tabs/AccountsTab.vue'
 import ActivityTab from './tabs/ActivityTab.vue'
 import { useTreasuryActivity } from './composables/useTreasuryActivity.js'
 import { useEpoch } from './composables/useEpoch.js'
-import { NETWORK } from './config.js'
+import { network } from './config.js'
 
 const TABS: AppTab[] = [
   { id: 'overview', label: 'Overview' },
@@ -51,6 +51,6 @@ const { epoch } = useEpoch()
       <component :is="activeComponent" />
     </UiTabPanel>
 
-    <UiStatusBar :network="NETWORK" :healthy="!eventsError" :epoch="epoch" :last-refresh="lastRefresh" />
+    <UiStatusBar :network="network" :healthy="!eventsError" :epoch="epoch" :last-refresh="lastRefresh" />
   </div>
 </template>

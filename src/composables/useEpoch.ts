@@ -1,5 +1,6 @@
-import { ref, onMounted, getCurrentInstance } from 'vue'
+import { ref } from 'vue'
 import { getSuiClient } from '../wallet.js'
+import { onChainContext } from './chainContext.js'
 
 export function useEpoch() {
   const epoch = ref<number | null>(null)
@@ -14,8 +15,7 @@ export function useEpoch() {
     }
   }
 
-  // Auto-load on mount, but only when used inside a component (skips in unit tests).
-  if (getCurrentInstance()) onMounted(load)
+  onChainContext(load, () => (epoch.value = null))
 
   return { epoch, reload: load }
 }

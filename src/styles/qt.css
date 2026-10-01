@@ -7,7 +7,7 @@
  * UiActivityFeed/UiActivityItem). What remains here are small text/layout
  * utilities that are specific to this console's tabs.
  *
- * Applied globally via DaoView.vue (so it works when embedded as a library).
+ * Applied globally via TreasuryView.vue (so it works when embedded as a library).
  */
 
 /* ── Shell layout ────────────────────────────────────────────────────────── */

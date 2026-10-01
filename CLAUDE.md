@@ -23,10 +23,15 @@ accounting; DAO is framed as governance.
 - **Revenue-stream framing.** The Sui treasury is presented as *one account among potentially many*.
   Keep the Accounts tab structured as a list of streams, not a Sui-only hardcode, so additional
   chains/streams slot in later.
-- **Events tolerate pruning + partial failure.** `useTreasuryActivity.ts` queries each event type
-  with `Promise.allSettled`, merges, and sorts by checkpoint descending. A pruned/failing type
-  degrades gracefully. Only the still-indexed `AccessMinted`/`AccessConsumed`/`AccessBurned` types
-  are queried.
+- **Chain reads go through `@meddleware/access-gate-client`.** The composables are thin wrappers:
+  exact types at the package's original id, paged owned-object reads, BCS-decoded events (a
+  consume's address is its `consumer`). `useTreasuryActivity.ts` lists `AccessMinted` and
+  `AccessConsumed` newest first through one module query, from the read-indexer when
+  `VITE_INDEXER_URL` is set (display data; falls back to the full node). Do not parse here.
+- **One network source, one id source.** The network is wallet-adapter's shared `useNetwork()`
+  selector (the standalone `main.ts` selects `VITE_NETWORK`). The ids come from
+  `@meddleware/access-gate-client/deployments` for that network — never env, never literals. With
+  no deployment for the network, composables report an error rather than querying.
 - **Shared qt components.** The desktop-console look comes from `@meddleware/ui` (UiPanel,
   UiToolbar/UiToolbarButton, UiStatusBar/UiStatusDot, UiDataTable, UiStatGrid/UiStatRow, UiBadge,
   UiActivityFeed/UiActivityItem, `AppTabNav variant="raised"` + `UiTabPanel`, `UiStatusBar` with its
@@ -38,7 +43,7 @@ accounting; DAO is framed as governance.
 
 | File | Purpose |
 | --- | --- |
-| `src/config.ts` | Build-time env: network, RPC, `access_gate` package id, `PlatformConfig` id. |
+| `src/config.ts` | The active `network` (wallet-adapter selector), `explorerNetwork`, `requireDeployment()` (ids from access-gate-client `deployments`), optional `INDEXER_URL`. |
 | `src/wallet.ts` | Shim over `@meddleware/wallet-adapter`; `getSuiClient()` for bare reads. |
 | `src/TreasuryView.vue` | Core tool UI — tab shell (Overview / Accounts / Activity) + status bar. Self-imports `styles/qt.css`; exported from `src/index.ts`. |
 | `src/index.ts` | Library entry — exports `TreasuryView`. |
@@ -65,4 +70,4 @@ imports its own `qt.css`, so no consumer needs this package's global CSS.
 - Do not add accounting/commission logic; it is on-chain in `access_gate`.
 - Do not require a wallet for reads. Reads use a bare `SuiClient`.
 - Do not hardcode Sui as the only revenue stream in the Accounts structure.
-- Do not hardcode network ids; read `import.meta.env.VITE_*` via `src/config.ts`.
+- Do not hardcode or env-configure package/object ids; take them from `requireDeployment()`.

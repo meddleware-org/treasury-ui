@@ -1,12 +1,17 @@
-import { ref, onMounted, getCurrentInstance } from 'vue'
+// Recent access_gate mints and consumes, newest first, typed by @meddleware/access-gate-client.
+// Read from the indexer when VITE_INDEXER_URL is set (display data; falls back to the full node).
+import { ref } from 'vue'
+import { listAccessGateEvents, type EventCursor } from '@meddleware/access-gate-client'
 import { getSuiClient } from '../wallet.js'
-import { PACKAGE_ID } from '../config.js'
+import { INDEXER_URL, network, requireDeployment } from '../config.js'
+import { latest, onChainContext } from './chainContext.js'
 
 export interface TreasuryEvent {
-  type: 'AccessMinted' | 'AccessConsumed' | 'AccessBurned'
+  type: 'AccessMinted' | 'AccessConsumed'
   txDigest: string
   checkpoint: string | null
-  address?: string
+  /** The buyer (or airdrop recipient) of a mint; the NFT owner who spent a use. */
+  address: string
 }
 
 export function useTreasuryActivity(limit = 20) {
@@ -14,62 +19,52 @@ export function useTreasuryActivity(limit = 20) {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const lastRefresh = ref<Date | null>(null)
+  /** Oldest checkpoint the indexer covers, when the list came from it. */
+  const indexedFromCheckpoint = ref<string | null>(null)
+  const begin = latest()
 
   async function load() {
-    if (!PACKAGE_ID) return
+    const current = begin()
     loading.value = true
     error.value = null
     try {
-      const client = getSuiClient()
-      const eventTypes = [
-        `${PACKAGE_ID}::access_gate::AccessMintedEvent`,
-        `${PACKAGE_ID}::access_gate::AccessConsumedEvent`,
-      ]
-
-      const results = await Promise.allSettled(
-        eventTypes.map((t) =>
-          client.listEvents({ filter: { eventType: t }, limit, order: 'descending' }),
-        ),
-      )
-
-      const all: TreasuryEvent[] = []
-      for (const r of results) {
-        if (r.status !== 'fulfilled') continue
-        for (const e of r.value.events) {
-          const typeName = e.eventType.split('::').pop() ?? ''
-          const label =
-            typeName === 'AccessMintedEvent' ? 'AccessMinted'
-            : typeName === 'AccessConsumedEvent' ? 'AccessConsumed'
-            : 'AccessBurned'
-          const f = (e.json ?? {}) as Record<string, unknown>
-          all.push({
-            type: label as TreasuryEvent['type'],
-            txDigest: e.transactionDigest,
-            checkpoint: e.checkpoint ?? null,
-            address: String(f.recipient ?? f.creator ?? f.sender ?? ''),
-          })
+      const d = requireDeployment()
+      const out: TreasuryEvent[] = []
+      let cursor: EventCursor | null = null
+      let from: string | null = null
+      // Bounded: each call scans at most a few full-node pages; ten calls cover any realistic limit.
+      for (let calls = 0; calls < 10; calls++) {
+        const page = await listAccessGateEvents(getSuiClient(), {
+          originalId: d.originalId,
+          kinds: ['AccessMinted', 'AccessConsumed'],
+          limit: Math.min(100, limit - out.length),
+          cursor,
+          indexer: INDEXER_URL ? { url: INDEXER_URL, network: network.value } : undefined,
+        })
+        for (const e of page.events) {
+          if (e.kind === 'AccessMinted') out.push({ type: e.kind, txDigest: e.txDigest, checkpoint: e.checkpoint, address: e.recipient })
+          else if (e.kind === 'AccessConsumed') out.push({ type: e.kind, txDigest: e.txDigest, checkpoint: e.checkpoint, address: e.consumer })
         }
+        from = page.indexedFromCheckpoint ?? from
+        cursor = page.cursor
+        if (!cursor || out.length >= limit) break
       }
-
-      // Sort globally by checkpoint descending so the merged list is newest-first across all types.
-      all.sort((a, b) => {
-        const ca = BigInt(a.checkpoint ?? '0')
-        const cb = BigInt(b.checkpoint ?? '0')
-        if (cb > ca) return 1
-        if (cb < ca) return -1
-        return 0
-      })
-      events.value = all.slice(0, limit)
+      if (!current()) return
+      events.value = out.slice(0, limit)
+      indexedFromCheckpoint.value = from
       lastRefresh.value = new Date()
     } catch (e) {
+      if (!current()) return
       error.value = e instanceof Error ? e.message : String(e)
     } finally {
-      loading.value = false
+      if (current()) loading.value = false
     }
   }
 
-  // Auto-load on mount, but only when used inside a component (skips in unit tests).
-  if (getCurrentInstance()) onMounted(load)
+  onChainContext(load, () => {
+    events.value = []
+    indexedFromCheckpoint.value = null
+  })
 
-  return { events, loading, error, lastRefresh, reload: load }
+  return { events, loading, error, lastRefresh, indexedFromCheckpoint, reload: load }
 }

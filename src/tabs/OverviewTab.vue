@@ -17,7 +17,7 @@ import {
   UiActivityFeed,
   UiActivityItem,
 } from '@meddleware/ui'
-import { NETWORK } from '../config.js'
+import { explorerNetwork } from '../config.js'
 import type { TreasuryEvent } from '../composables/useTreasuryActivity.js'
 
 const { config } = usePlatformConfig()
@@ -28,7 +28,6 @@ const { gates, loading: gatesLoading } = useGates()
 const eventLabel: Record<TreasuryEvent['type'], string> = {
   AccessMinted: 'Access sold',
   AccessConsumed: 'Access used',
-  AccessBurned: 'Access burned',
 }
 
 const commissionPct = computed(() =>
@@ -49,7 +48,7 @@ const accessesConsumed = computed(() => events.value.filter((e) => e.type === 'A
           <UiStatRow label="Commission rate">{{ commissionPct }}</UiStatRow>
           <UiStatRow label="Treasury address" align="left">
             <CopyableAddress v-if="config?.treasury" :address="config.treasury">
-              <ExplorerLink :href="suiExplorerUrl('account', config.treasury, NETWORK)" :value="config.treasury" />
+              <ExplorerLink :href="suiExplorerUrl('account', config.treasury, explorerNetwork)" :value="config.treasury" />
             </CopyableAddress>
             <span v-else class="dao-mono dao-mono--sm">—</span>
           </UiStatRow>

@@ -11,10 +11,10 @@ import {
   UiBadge,
   UiToolbarButton,
 } from '@meddleware/ui'
-import { NETWORK } from '../config.js'
+import { explorerNetwork } from '../config.js'
 import type { TreasuryEvent } from '../composables/useTreasuryActivity.js'
 
-const { events, loading, error, reload } = useTreasuryActivity(200)
+const { events, loading, error, reload, indexedFromCheckpoint } = useTreasuryActivity(200)
 
 const PAGE_SIZE = 20
 const page = ref(1)
@@ -30,7 +30,6 @@ function nextPage() { if (page.value < totalPages.value) page.value++ }
 const eventLabel: Record<TreasuryEvent['type'], string> = {
   AccessMinted: 'Access Sold',
   AccessConsumed: 'Access Used',
-  AccessBurned: 'Access Burned',
 }
 
 function badgeVariant(type: TreasuryEvent['type']): 'active' | 'closed' {
@@ -47,13 +46,14 @@ function badgeVariant(type: TreasuryEvent['type']): 'active' | 'closed' {
   </header>
 
   <p v-if="error" class="dao-muted">{{ error }}</p>
+  <p v-if="indexedFromCheckpoint" class="dao-muted">Indexed since checkpoint {{ indexedFromCheckpoint }}.</p>
 
   <UiDataTable v-if="pageEvents.length || loading" :empty="'No events'">
     <template #head>
       <th>Type</th>
       <th>
         Address
-        <abbr class="dao-info" title="The wallet address associated with this event (recipient, creator, or initiator depending on event type). Click to view in explorer; click the copy icon to copy the full address.">?</abbr>
+        <abbr class="dao-info" title="The buyer of a sold pass, or the holder who used one. Click to view in explorer; click the copy icon to copy the full address.">?</abbr>
       </th>
       <th>
         Block
@@ -68,7 +68,7 @@ function badgeVariant(type: TreasuryEvent['type']): 'active' | 'closed' {
       <td><UiBadge :variant="badgeVariant(ev.type)">{{ eventLabel[ev.type] }}</UiBadge></td>
       <td class="dao-mono activity__cell dao-nowrap">
         <CopyableAddress v-if="ev.address && ev.address !== 'undefined'" :address="ev.address">
-          <ExplorerLink :href="suiExplorerUrl('account', ev.address, NETWORK)" :value="ev.address" />
+          <ExplorerLink :href="suiExplorerUrl('account', ev.address, explorerNetwork)" :value="ev.address" />
         </CopyableAddress>
         <span v-else>—</span>
       </td>
@@ -77,7 +77,7 @@ function badgeVariant(type: TreasuryEvent['type']): 'active' | 'closed' {
       </td>
       <td class="dao-mono activity__cell dao-nowrap">
         <CopyableAddress :address="ev.txDigest" label="Copy transaction">
-          <ExplorerLink :href="suiExplorerUrl('txblock', ev.txDigest, NETWORK)" :value="ev.txDigest" />
+          <ExplorerLink :href="suiExplorerUrl('txblock', ev.txDigest, explorerNetwork)" :value="ev.txDigest" />
         </CopyableAddress>
       </td>
     </tr>

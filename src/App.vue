@@ -2,7 +2,7 @@
 // Standalone shell for the Treasury SPA. The core UI lives in TreasuryView.vue (also
 // exported for inline embedding in the dashboard).
 import { AppHeader, AppFooter, ColorModeControl, CopyrightLine, useColorMode } from '@meddleware/ui'
-import { NETWORK } from './config.js'
+import { network } from './config.js'
 import TreasuryView from './TreasuryView.vue'
 
 const { mode, set } = useColorMode('dark')
@@ -17,7 +17,7 @@ const DEV_URL = import.meta.env.VITE_DEV_URL || 'https://dev.meddleware.co.uk/tr
         <h1 class="brand-title">Meddleware Treasury</h1>
       </template>
       <template #actions>
-        <span class="network-badge">{{ NETWORK }}</span>
+        <span class="network-badge">{{ network }}</span>
         <ColorModeControl :model-value="mode" @update:model-value="set" />
       </template>
     </AppHeader>
