@@ -14,6 +14,8 @@ accounting; DAO is framed as governance.
 
 ## Architectural invariants
 
+- **One wallet-adapter in a host.** Declare `@meddleware/wallet-adapter` as a peerDependency (`>=0.0.12 <0.2.0`, plus a devDependency):
+  the host's single copy must satisfy every embedded tool, or each gets its own connection.
 - **Read-only, wallet-optional.** All displayed data is read from Sui via a bare `SuiClient`; no
   wallet is required to view balances, accounts, or activity. (A wallet singleton is wired for
   future signing but nothing here needs it.)

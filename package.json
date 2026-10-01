@@ -1,6 +1,6 @@
 {
   "name": "@meddleware/treasury-ui",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "homepage": "https://docs.meddleware.co.uk/treasury/",
   "description": "Meddleware treasury console — organisation-level accounting across revenue streams (Sui and beyond). Read-only, desktop-console UI built on @meddleware/ui.",
   "author": "Meddleware <dev@meddleware.co.uk>",
@@ -47,11 +47,14 @@
     "@meddleware/access-gate-client": "^0.0.1",
     "@meddleware/design-tokens": "^0.1.7",
     "@meddleware/ui": "^0.1.28",
-    "@meddleware/wallet-adapter": "^0.0.11",
     "@mysten/sui": "^2.33.1",
     "vue": "^3.5.43"
   },
+  "peerDependencies": {
+    "@meddleware/wallet-adapter": ">=0.0.12 <0.2.0"
+  },
   "devDependencies": {
+    "@meddleware/wallet-adapter": "^0.0.12",
     "@types/node": "~24.12.2",
     "@vitejs/plugin-vue": "^6.0.9",
     "@vue/eslint-config-typescript": "^14.9.0",
