@@ -49,7 +49,7 @@ const minted = (checkpoint: string, pkg = PKG) =>
 const consumed = (checkpoint: string) =>
   ev('AccessConsumedEvent', Consumed.serialize({ nft_id: GATE, gate_id: GATE, nonce: [...Buffer.from('nonce-123')], consumer: HOLDER, uses_after: 0, timestamp_ms: 2 }).toBytes(), checkpoint)
 
-const configObject = { object: { objectId: CFG, type: `${PKG}::access_gate::PlatformConfig`, json: { treasury: TREASURY, commission_bps: '20', min_commission_mist: '1000000', free_gate_fee_mist: '100000000' } } }
+const configObject = { object: { objectId: CFG, type: `${PKG}::access_gate::PlatformConfig`, json: { version: '1', treasury: TREASURY, commission_bps: '20', min_commission_mist: '1000000', free_gate_fee_mist: '100000000' } } }
 
 beforeEach(() => {
   listEvents.mockReset()
@@ -113,6 +113,24 @@ describe('usePlatformConfig', () => {
   })
 })
 
+/** A complete Gate `json` (access-gate-client's parser rejects one with a missing field). */
+const gateJson = (over: Record<string, unknown>) => ({
+  price_mist: '0',
+  payment_recipient: TREASURY,
+  default_uses: '0',
+  soulbound: false,
+  auto_burn_at_zero: false,
+  paused: false,
+  frozen: false,
+  nft_name: '',
+  nft_image_url: '',
+  nft_description: '',
+  policy: { freeze_requires_unpaused: false, lock_commission_on_freeze: false, pause_blocks_decryption: false, pause_blocks_access: false },
+  locked_commission: null,
+  free_fee_paid: false,
+  ...over,
+})
+
 describe('useGates', () => {
   it('lists the treasury\'s gates across pages and leaves out one that cannot be read', async () => {
     const cap = (id: string, gate: string) => ({ objectId: id, type: `${PKG}::access_gate::AdminCap`, json: { gate_id: gate } })
@@ -121,8 +139,9 @@ describe('useGates', () => {
       .mockResolvedValueOnce({ objects: [cap('0x2', GATE)], hasNextPage: false, cursor: null })
     getObject.mockImplementation(async ({ objectId }: { objectId: string }) => {
       if (objectId === CFG) return configObject
-      if (objectId === '0xbad') throw new Error('gate fetch failed')
-      return { object: { objectId, type: `${PKG}::access_gate::Gate`, json: { nft_name: 'Good', price_mist: '100', paused: false, frozen: true } } }
+      // access-gate-client hands back normalised ids.
+      if (objectId === normalizeSuiAddress('0xbad')) throw new Error('gate fetch failed')
+      return { object: { objectId, type: `${PKG}::access_gate::Gate`, json: gateJson({ nft_name: 'Good', price_mist: '100', paused: false, frozen: true }) } }
     })
     const { gates, error, reload } = useGates()
     await reload()
