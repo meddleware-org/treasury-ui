@@ -1,18 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import { bcs } from '@mysten/sui/bcs'
 import { normalizeSuiAddress } from '@mysten/sui/utils'
 
 // The composables are thin wrappers over @meddleware/access-gate-client. Only the wallet's client
 // (the core API) and the deployment are mocked; the real client parses objects and decodes events.
 // onMounted does not fire outside a component, so each test calls `reload()` directly.
-const { listEvents, getObject, listOwnedObjects, deployment } = vi.hoisted(() => ({
+const { listEvents, getObject, listOwnedObjects, getBalance, deployment } = vi.hoisted(() => ({
   listEvents: vi.fn(),
+  getBalance: vi.fn(),
   getObject: vi.fn(),
   listOwnedObjects: vi.fn(),
   deployment: { current: null as null | { originalId: string; publishedAt: string; platformConfigId: string } },
 }))
-vi.mock('../src/wallet.js', () => ({ getSuiClient: () => ({ core: { listEvents, getObject, listOwnedObjects } }) }))
+vi.mock('../src/wallet.js', () => ({ getSuiClient: () => ({ core: { listEvents, getObject, listOwnedObjects, getBalance } }) }))
 vi.mock('../src/config.js', () => ({
   network: ref('testnet'),
   INDEXER_URL: '',
@@ -25,6 +26,7 @@ vi.mock('../src/config.js', () => ({
 import { useTreasuryActivity } from '../src/composables/useTreasuryActivity.js'
 import { useGates } from '../src/composables/useGates.js'
 import { usePlatformConfig } from '../src/composables/usePlatformConfig.js'
+import { useTreasury } from '../src/composables/useTreasury.js'
 
 const PKG = normalizeSuiAddress('0xa1')
 const CFG = normalizeSuiAddress('0xcf')
@@ -55,6 +57,7 @@ beforeEach(() => {
   listEvents.mockReset()
   getObject.mockReset()
   listOwnedObjects.mockReset()
+  getBalance.mockReset()
   deployment.current = { originalId: PKG, publishedAt: PKG, platformConfigId: CFG }
 })
 
@@ -148,5 +151,49 @@ describe('useGates', () => {
     expect(error.value).toBeNull()
     expect(gates.value).toEqual([{ id: GATE, name: 'Good', price: 100n, paused: false, frozen: true }])
     expect(listOwnedObjects).toHaveBeenCalledWith(expect.objectContaining({ owner: TREASURY, type: `${PKG}::access_gate::AdminCap` }))
+  })
+})
+
+describe('useTreasury', () => {
+  const flush = () => new Promise((r) => setTimeout(r, 0))
+  const bal = (total: string, coins: string) => ({ balance: { coinType: '0x2::sui::SUI', balance: total, coinBalance: coins, addressBalance: String(BigInt(total) - BigInt(coins)) } })
+
+  it('counts coin objects and the address balance', async () => {
+    getBalance.mockResolvedValue(bal('15', '10'))
+    const { balance, error } = useTreasury(() => TREASURY)
+    await flush()
+    expect(getBalance).toHaveBeenCalledWith({ owner: TREASURY, coinType: '0x2::sui::SUI' })
+    expect(balance.value).toBe(15n)
+    expect(error.value).toBeNull()
+  })
+
+  it('keeps the newest address when an older read resolves last', async () => {
+    let resolveOld: (v: unknown) => void = () => {}
+    getBalance.mockImplementationOnce(() => new Promise((r) => (resolveOld = r))).mockResolvedValueOnce(bal('2', '2'))
+    const addr = ref<string | null>(BUYER)
+    const { balance, loading } = useTreasury(() => addr.value)
+    addr.value = TREASURY
+    await nextTick()
+    await flush()
+    resolveOld(bal('1', '1'))
+    await flush()
+    expect(balance.value).toBe(2n)
+    expect(loading.value).toBe(false)
+  })
+
+  it('clears while the address is unknown, and on a failed read', async () => {
+    getBalance.mockResolvedValueOnce(bal('5', '5')).mockRejectedValueOnce(new Error('unavailable'))
+    const addr = ref<string | null>(TREASURY)
+    const { balance, error } = useTreasury(() => addr.value)
+    await flush()
+    expect(balance.value).toBe(5n)
+    addr.value = null
+    await nextTick()
+    expect(balance.value).toBeNull()
+    addr.value = BUYER
+    await nextTick()
+    await flush()
+    expect(balance.value).toBeNull()
+    expect(error.value).toBe('unavailable')
   })
 })

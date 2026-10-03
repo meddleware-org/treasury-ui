@@ -3,8 +3,8 @@
 ## Scope
 
 This policy covers security issues in the `@meddleware/treasury-ui` application/library source (`src/**`)
-— the read-only Treasury console, the `DaoView` library export, and the read composables
-(`useTreasury`, `useGates`, `useDaoEvents`, `usePlatformConfig`, `useEpoch`, `useProposals`).
+— the read-only Treasury console, the `TreasuryView` library export, and the read composables
+(`useTreasury`, `useGates`, `useTreasuryActivity`, `usePlatformConfig`, `useEpoch`).
 
 It does not cover:
 
@@ -18,7 +18,7 @@ treated as high severity:
 
 1. **Read-only by default.** The default path signs and mutates nothing; chain reads are treated as
    display, never as authority.
-2. **No dynamic HTML sinks.** Treasury/proposal/gate strings sourced from chain (which are
+2. **No dynamic HTML sinks.** Treasury, gate and event strings sourced from chain (which are
    attacker-influenceable) render as text; URLs are validated.
 3. **No secret is a `VITE_*` value.** The network and the optional indexer URL are public config;
    the access-gate ids come from the published `deployments`, not from the build.
@@ -28,8 +28,8 @@ treated as high severity:
 5. **Exact types.** Objects and events are accepted only at the deployment's original id
    (`@meddleware/access-gate-client`), so a look-alike package cannot feed the console.
 
-> When a future `vault_dao` proposals module adds wallet-signed DAO actions, this read-only model no
-> longer applies and the app must be re-reviewed.
+> If wallet-signed actions are ever added, this read-only model no longer applies and the app must
+> be re-reviewed.
 
 ## Supported versions
 
