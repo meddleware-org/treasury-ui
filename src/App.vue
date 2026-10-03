@@ -6,8 +6,8 @@ import { network } from './config.js'
 import TreasuryView from './TreasuryView.vue'
 
 const { mode, set } = useColorMode('dark')
-const DOCS_URL = import.meta.env.VITE_DOCS_URL || 'https://docs.meddleware.co.uk/treasury/'
-const DEV_URL = import.meta.env.VITE_DEV_URL || 'https://dev.meddleware.co.uk/treasury/'
+const DOCS_URL = import.meta.env.VITE_DOCS_URL || 'https://docs.meddleware.co.uk/blockchain/sui/treasury/'
+const DEV_URL = import.meta.env.VITE_DEV_URL || 'https://dev.meddleware.co.uk/sui/access-gate/'
 </script>
 
 <template>
