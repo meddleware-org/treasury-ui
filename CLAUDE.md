@@ -14,6 +14,12 @@ accounting; DAO is framed as governance.
 
 ## Architectural invariants
 
+- **No on-chain logic here — extend the domain client.** `suiBoundary()` from
+  `@meddleware/eslint-config` (the last entry in `eslint.config.ts`) forbids, in `src/` outside
+  `src/wallet.ts`: value imports of `@mysten/sui/{grpc,client,transactions}` (type-only imports are
+  fine; `@mysten/sui/jsonRpc` is banned outright), building transactions and chain reads. URL
+  bindings on native elements must go through `safeHref`, `safeIcon`, `suiExplorerUrl` or
+  `walruscanBlobUrl`. Do not disable it — move the logic into the domain client instead.
 - **One wallet-adapter in a host.** Declare `@meddleware/wallet-adapter` as a peerDependency (`>=0.0.12 <0.2.0`, plus a devDependency):
   the host's single copy must satisfy every embedded tool, or each gets its own connection.
 - **Read-only, wallet-optional.** All displayed data is read from Sui via a bare `SuiClient`; no
