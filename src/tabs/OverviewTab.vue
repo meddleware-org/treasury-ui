@@ -47,8 +47,8 @@ const accessesConsumed = computed(() => events.value.filter((e) => e.type === 'A
           <UiStatRow label="SUI balance"><AmountCell :mist="balance" /></UiStatRow>
           <UiStatRow label="Commission rate">{{ commissionPct }}</UiStatRow>
           <UiStatRow label="Treasury address" align="left">
-            <CopyableAddress v-if="config?.treasury" :address="config.treasury">
-              <ExplorerLink :href="suiExplorerUrl('account', config.treasury, explorerNetwork)" :value="config.treasury" />
+            <CopyableAddress v-if="config?.treasury" :address="config.treasury" :truncate="false">
+              <ExplorerLink :href="suiExplorerUrl('account', config.treasury, explorerNetwork)" :value="config.treasury" :truncate="false" />
             </CopyableAddress>
             <span v-else class="dao-mono dao-mono--sm">—</span>
           </UiStatRow>

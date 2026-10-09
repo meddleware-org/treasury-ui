@@ -41,8 +41,8 @@ function formatPrice(mist: bigint): string {
           <UiStatRow label="Commission rate">{{ commissionPct }} ({{ config.commissionBps }} bps)</UiStatRow>
           <UiStatRow label="Current balance"><AmountCell :mist="balance" /></UiStatRow>
           <UiStatRow label="Treasury address" align="left">
-            <CopyableAddress :address="config.treasury">
-              <ExplorerLink :href="suiExplorerUrl('account', config.treasury, explorerNetwork)" :value="config.treasury" />
+            <CopyableAddress :address="config.treasury" :truncate="false">
+              <ExplorerLink :href="suiExplorerUrl('account', config.treasury, explorerNetwork)" :value="config.treasury" :truncate="false" />
             </CopyableAddress>
           </UiStatRow>
         </UiStatGrid>
