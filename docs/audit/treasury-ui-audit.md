@@ -50,7 +50,7 @@ the first pass:
   published image before cosign signs it, ships the lockfile for SBOM tools, serves
   `/THIRD_PARTY_LICENSES`, runs as an explicit `USER 65534:65534` on static-server 0.1.7, and the pod
   sets `automountServiceAccountToken: false`.
-- The newly applicable lens checks found three defects, all fixed in 0.0.18 (commit pending): **F10 (Low,
+- The newly applicable lens checks found three defects, all fixed in 0.0.18 (commit `518e0d1`): **F10 (Low,
   RESOLVED)** the unit tests run in `node-ci.yml` and so in both release gates; **F11 (Info, RESOLVED)**
   the unused `.dao-notice` rule that drew `--warning` as text is removed and a test pins it; **F12 (Info,
   RESOLVED)** the 0BSD `LICENSE` file is added.
@@ -200,7 +200,7 @@ scan runs at release).
 
 ### F10 — Unit tests are not run by CI or by the release gate
 
-**Severity:** Low   **Disposition:** RESOLVED (0.0.18; commit pending — `node-ci.yml` runs `npm test` since `fd41da4`, `npm-publish.yml` calls it)
+**Severity:** Low   **Disposition:** RESOLVED (0.0.18; commit `518e0d1` — `node-ci.yml` runs `npm test` since `fd41da4`, `npm-publish.yml` calls it)
 **Where:** `.github/workflows/node-ci.yml` (no `npm test` step); `docker-publish.yml` `verify` calls it
 **Issue:** CI runs the audit gate, type-check, the three linters, the build and the licence check, but not
 the 12 unit tests (as audited 2026-10-09). Only the npm job's `verify` ran `npm test`. The image release's own `verify` job did
@@ -217,7 +217,7 @@ workflow, so the image and the package are gated on the same checks. Verified by
 
 ### F11 — `--warning` drawn as text in an unused rule
 
-**Severity:** Info   **Disposition:** RESOLVED (0.0.18; commit pending — rule deleted, pinned by `tests/design-tokens-used.test.ts`)
+**Severity:** Info   **Disposition:** RESOLVED (0.0.18; commit `518e0d1` — rule deleted, pinned by `tests/design-tokens-used.test.ts`)
 **Where:** `src/styles/qt.css:167-175` (`.dao-notice { border/color: var(--warning); background: color-mix(… var(--warning) 10% …) }`)
 **Issue:** `--warning` is the bright yellow fill (2.0:1 on the light canvas). The rule draws it as text
 (design-tokens audit F2, F10; dao-ui has the same rule). `grep` finds no use of `.dao-notice` in this
@@ -232,7 +232,7 @@ covers the shared components only).
 
 ### F12 — No `LICENSE` file although the package declares 0BSD
 
-**Severity:** Info   **Disposition:** RESOLVED (0.0.18; commit pending — `LICENSE` added)
+**Severity:** Info   **Disposition:** RESOLVED (0.0.18; commit `518e0d1` — `LICENSE` added)
 **Where:** repository root; `package.json` (`"license": "0BSD"`); `npm pack --dry-run` 2026-10-09
 **Issue:** the repository has no `LICENSE` file, so the published tarball carries only the SPDX id.
 access-gate-ui, seal-ui, walrus-ui and token-deployer-ui ship one. (dao-ui lacks it too.)
@@ -256,7 +256,7 @@ break white-label builds. Revisit when the hosts are fixed for mainnet.
 
 ### F14 — The npm publish gate is a subset of CI
 
-**Severity:** Low   **Disposition:** RESOLVED (0.0.18; commit pending — `npm-publish.yml` `verify` calls `node-ci.yml`)
+**Severity:** Low   **Disposition:** RESOLVED (0.0.18; commit `518e0d1` — `npm-publish.yml` `verify` calls `node-ci.yml`)
 **Where:** `.github/workflows/npm-publish.yml`
 **Issue:** the npm job's `verify` runs `npm ci`, the audit gate, type-check and the unit tests, not the
 full CI workflow (linters, licence check). The image release (F9) does run the full workflow on the
@@ -453,8 +453,8 @@ suite is hermetic. The suite runs in `node-ci.yml`, so in the image release and 
 - [x] `SECURITY.md` present and accurate (F5)
 - [x] image: digest-pinned bases, non-root, restricted pod, probes and limits, deployed by digest, signed with SBOM and provenance, scanned before signing (F9)
 - [x] consumed IDs are the latest on-chain version — live bundle carries `0xd7ddaa94…` and `0x3f81489d…` only (B.SC-1)
-- [x] every test project runs in CI — F10 (`node-ci.yml` `npm test` since `fd41da4`; `npm-publish.yml` `verify` calls it from 0.0.18; commit pending)
-- [x] colour: no warning text below AA on the light theme — F11 (unused `.dao-notice` removed; `tests/design-tokens-used.test.ts`; 0.0.18, commit pending)
+- [x] every test project runs in CI — F10 (`node-ci.yml` `npm test` since `fd41da4`; `npm-publish.yml` `verify` calls it from 0.0.18; commit `518e0d1`)
+- [x] colour: no warning text below AA on the light theme — F11 (unused `.dao-notice` removed; `tests/design-tokens-used.test.ts`; 0.0.18, commit `518e0d1`)
 
 ### pre-mainnet
 
@@ -529,7 +529,7 @@ None.
   matrix added; D gates updated. Counts: 16 findings — 6 RESOLVED (F3–F7, F9), 2 Positive (F1, F2),
   1 ADJUDICATED (F8), 3 ACCEPTED-RISK (F13–F15), 4 DEFERRED (F10–F12 next patch; F16 maintainer);
   tests 12/12, `vue-tsc`, three linters and the audit gate green.
-- 2026-10-18 — fix wave, 0.0.18 (commit pending): dependencies `@meddleware/access-gate-client` ^0.0.9,
+- 2026-10-18 — fix wave, 0.0.18 (commit `518e0d1`): dependencies `@meddleware/access-gate-client` ^0.0.9,
   `@meddleware/design-tokens` ^0.1.10, `@mysten/sui` ^2.36.0; image base static-server 0.1.8
   (`sha256:e32cf42b…4000`, digest read from quay.io 2026-10-18). F10 RESOLVED (`node-ci.yml` runs
   `npm test` since `fd41da4`; the `docker-publish.yml` comment is now accurate), F11 RESOLVED (unused
