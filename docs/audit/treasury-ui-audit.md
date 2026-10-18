@@ -4,17 +4,17 @@
 **Project:** `repos/treasury-ui` — `@meddleware/treasury-ui`, Vue 3 organisation treasury console (overview, accounts, activity; standalone SPA + `TreasuryView` library, embedded in the dashboard)
 **Project type:** Vue app + UI library
 **Template:** AUDIT_TEMPLATE.md (2026-10-08) + AUDIT_TEMPLATE_SUI_CLIENT.md (2026-10-08) + AUDIT_TEMPLATE_TS.md (2026-10-08) + AUDIT_TEMPLATE_VUE.md (2026-10-08) + AUDIT_TEMPLATE_IMG.md (2026-10-08)
-**Sui SDK:** `@mysten/sui ^2.33.2` (installed 2.35.0, one copy; `npm ls` single version)   **Transport:** gRPC through wallet-adapter; optional read-indexer over HTTPS
+**Sui SDK:** `@mysten/sui ^2.36.0` (installed 2.36.0, one copy; `npm ls` single version)   **Transport:** gRPC through wallet-adapter; optional read-indexer over HTTPS
 **Networks:** testnet (recorded deployment); any other network reports "no deployment" instead of querying
-**On-chain packages consumed:** `access_gate` (reads only) through `@meddleware/access-gate-client/deployments` (0.0.8: testnet `0xd7ddaa94…88c9`, PlatformConfig `0x3f81489d…e7b5`; reads use `originalId`)
+**On-chain packages consumed:** `access_gate` (reads only) through `@meddleware/access-gate-client/deployments` (0.0.9: testnet `0xd7ddaa94…88c9`, PlatformConfig `0x3f81489d…e7b5`; reads use `originalId`)
 **Package manager / lockfile:** npm 11, committed (also copied into the image for SBOM tools)   **Module format / publish model:** ESM; ships source (library) + SPA image
 **Runtime targets:** browser   **Peer dependencies:** `@meddleware/wallet-adapter >=0.0.12 <0.2.0`
 **Build tool:** vite 8.3, `@vitejs/plugin-vue` 6.0.9, vue 3.5.43, vue-tsc 3.3.x, TypeScript 6.0.3, vitest 5.0.3
 **Hosting:** container image on static-server (CSP and HSTS from the server); no static-host `_headers` file
 **Embedding hosts:** the dashboard (`TreasuryView`, own scoped `qt.css`, no shell chrome; dashboard requires `^0.0.16`)
 **VITE_\* inventory:** `VITE_NETWORK` (testnet|mainnet, baked, selects the network only), `VITE_INDEXER_URL` (optional read-indexer base URL, baked, display data), `VITE_DOCS_URL` / `VITE_DEV_URL` (footer links, baked); all public, none selects an on-chain id; all four are in `.env.example`
-**Images:** `quay.io/meddleware-org/treasury-ui:0.0.17@sha256:8e155ce3…b259` (Docker Hub mirror; cosign keyless, SPDX SBOM attestation, build provenance; verified 2026-10-09, `verify-digests.sh` 16/16)
-**Base images:** build `node:24-slim@sha256:0e0ff40c…f9b6`; runtime `quay.io/meddleware-org/static-server:0.1.7@sha256:2e227311…2379` (Go 1.26.9)
+**Images:** `quay.io/meddleware-org/treasury-ui:0.0.17@sha256:8e155ce3…b259` deployed (0.0.18 is committed, not yet released; Docker Hub mirror; cosign keyless, SPDX SBOM attestation, build provenance; verified 2026-10-09, `verify-digests.sh` 16/16)
+**Base images:** build `node:24-slim@sha256:0e0ff40c…f9b6`; runtime `quay.io/meddleware-org/static-server:0.1.8@sha256:e32cf42b…4000` (0.1.7 in the deployed 0.0.17 image)
 **Runtime user:** `USER 65534:65534`   **Runtime FS:** read-only root, no writable mounts
 **Deployed by:** `post-bootstrap/treasury-ui/overlays/default`; digest from `config/images.yaml`
 **Build args:** `VITE_NETWORK`, `VITE_INDEXER_URL` and `CSP` — none secret, none a test switch
@@ -22,7 +22,7 @@
 **Review date:** 2026-10-03 (first pass) · re-verified 2026-10-09
 **Reviewer:** Internal review
 **Severity ceiling:** Low — read-only; nothing is signed and no wallet is needed.
-**Status:** re-verified 2026-10-09
+**Status:** re-verified 2026-10-09; fix wave 2026-10-18 (0.0.18)
 
 ---
 
@@ -41,7 +41,7 @@ This first pass found and fixed, in 0.0.10:
 - **F4 (Low)** — the treasury and epoch reads had no stale-result guard across network switches.
 - **F5 (Info)** — `SECURITY.md` described dao-ui's export and composables.
 
-Re-verified 2026-10-09 (0.0.17; 12 unit tests, type-check and all three linters green, audit gate
+Re-verified 2026-10-09 (0.0.17; 12 unit tests then, 27 in 0.0.18, type-check and all three linters green, audit gate
 1 allowlisted / 0 open; live site `treasury.meddleware.co.uk` read the same day). F1 to F6 hold. Since
 the first pass:
 
@@ -50,13 +50,12 @@ the first pass:
   published image before cosign signs it, ships the lockfile for SBOM tools, serves
   `/THIRD_PARTY_LICENSES`, runs as an explicit `USER 65534:65534` on static-server 0.1.7, and the pod
   sets `automountServiceAccountToken: false`.
-- The newly applicable lens checks found three defects that are **not yet fixed** (code changes are
-  outside this alignment; each is a small change for the next patch release): **F10 (Low, DEFERRED)**
-  `node-ci.yml` never runs the unit tests, so the release gate does not either; **F11 (Info, DEFERRED)**
-  `qt.css:172` draws `--warning` as text (2.0:1 on the light canvas, design-tokens audit F10) in a rule no
-  component here uses; **F12 (Info, DEFERRED)** the package declares 0BSD but ships no `LICENSE` file.
-- Accepted or maintainer items: **F13** blanket `connect-src https:`, **F14** the npm job's gate is a
-  subset of CI, **F15** the cosign identity pins the repository not the workflow (all ACCEPTED-RISK),
+- The newly applicable lens checks found three defects, all fixed in 0.0.18 (commit pending): **F10 (Low,
+  RESOLVED)** the unit tests run in `node-ci.yml` and so in both release gates; **F11 (Info, RESOLVED)**
+  the unused `.dao-notice` rule that drew `--warning` as text is removed and a test pins it; **F12 (Info,
+  RESOLVED)** the 0BSD `LICENSE` file is added.
+- Accepted or maintainer items: **F13** blanket `connect-src https:`, **F15** the cosign identity pins the repository not the workflow (both ACCEPTED-RISK; **F14**, the npm
+  job's gate being a subset of CI, is RESOLVED in 0.0.18),
   **F16** registry mirror and credential inventory (DEFERRED, maintainer); **F8** records that the
   balance and epoch reads are made directly through the core client (ADJUDICATED).
 
@@ -96,8 +95,9 @@ Critical / High / Medium / Low / Info / Positive.
 - **Out of scope:** access-gate-client, wallet-adapter, ui (own audits).
 - **Environment (2026-10-09):** `npm test` 12/12 (2 files, vitest 5.0.3); `vue-tsc`; stylelint, eslint,
   html-validate; production build; audit gate (1 allowlisted advisory, 0 open); `npm pack --dry-run`;
-  live headers and bundle of `treasury.meddleware.co.uk`. The repository has no `CHANGELOG.md` (the
-  `files` list names one); `git log` carries the release history.
+  live headers and bundle of `treasury.meddleware.co.uk`. `CHANGELOG.md` exists from 0.0.18; earlier
+  releases are in `git log` only. 2026-10-18: `npm test` 27/27 (3 files), all linters, build, licence check
+  and the audit gate pass on 0.0.18.
 
 ## Findings
 
@@ -186,7 +186,7 @@ inherited from the base.
 **Impact:** a tag could ship what CI would have refused; an SBOM that misses the bundled dependencies;
 redistributed MIT/Apache code without its notices.
 **Remediation / evidence:** `verify` calls `node-ci.yml` (`workflow_call`) and every build job `needs`
-it (it lacks the unit tests, F10); the merge-and-sign job builds per architecture, merges the manifest,
+it (with the unit tests since `fd41da4`, F10); the merge-and-sign job builds per architecture, merges the manifest,
 runs Trivy on the merged digest (CRITICAL/HIGH, fixable only, `exit-code: 1`) before `cosign sign`, then
 an SPDX SBOM attestation and build provenance for quay.io and Docker Hub, with no `continue-on-error`
 on the public path; the Dockerfile runs `npm run licenses` in the build stage and copies
@@ -200,23 +200,24 @@ scan runs at release).
 
 ### F10 — Unit tests are not run by CI or by the release gate
 
-**Severity:** Low   **Disposition:** DEFERRED (next patch release; add one step to `node-ci.yml`)
+**Severity:** Low   **Disposition:** RESOLVED (0.0.18; commit pending — `node-ci.yml` runs `npm test` since `fd41da4`, `npm-publish.yml` calls it)
 **Where:** `.github/workflows/node-ci.yml` (no `npm test` step); `docker-publish.yml` `verify` calls it
 **Issue:** CI runs the audit gate, type-check, the three linters, the build and the licence check, but not
-the 12 unit tests. Only the npm job's `verify` runs `npm test`. The image release's own `verify` job did
+the 12 unit tests (as audited 2026-10-09). Only the npm job's `verify` ran `npm test`. The image release's own `verify` job did
 run `npm test` until 0.0.17 (`9df71b7`), which replaced it with a call to `node-ci.yml` (F9) and so
 dropped the tests from the image gate; the comment in `docker-publish.yml` ("type-check, lint, tests,
 build, licences") is wrong. TS lens: every test project that exists runs in CI.
 **Impact:** a regression in the composables (stale-read guards, total balance, exact-type activity)
 could merge and be released as an image without any gate failing; the npm job would still catch it for
 the library.
-**Remediation / evidence:** add `- run: npm test` to `node-ci.yml` (as walrus-ui, token-deployer-ui and
-ui do); verified by reading both workflows 2026-10-09 and running the suite locally (12/12 pass, so
-adding the step turns nothing red).
+**Remediation / evidence:** `node-ci.yml` has an `Unit tests` step (`npm test`, between the HTML lint and the
+build) since `fd41da4`; both `docker-publish.yml` and, from 0.0.18, `npm-publish.yml` `verify` call that
+workflow, so the image and the package are gated on the same checks. Verified by reading the workflows
+2026-10-18; the suite runs 27/27 locally.
 
 ### F11 — `--warning` drawn as text in an unused rule
 
-**Severity:** Info   **Disposition:** DEFERRED (next patch release; delete the rule or use `--warning-text`)
+**Severity:** Info   **Disposition:** RESOLVED (0.0.18; commit pending — rule deleted, pinned by `tests/design-tokens-used.test.ts`)
 **Where:** `src/styles/qt.css:167-175` (`.dao-notice { border/color: var(--warning); background: color-mix(… var(--warning) 10% …) }`)
 **Issue:** `--warning` is the bright yellow fill (2.0:1 on the light canvas). The rule draws it as text
 (design-tokens audit F2, F10; dao-ui has the same rule). `grep` finds no use of `.dao-notice` in this
@@ -224,20 +225,22 @@ repo's `src/`, so the defect is latent: no shipped treasury screen shows it. The
 exported with `TreasuryView`, so a host or a later screen using the class would inherit it.
 **Impact:** none today; a future warning notice would be hard to read in the light theme (VUE lens
 *Colour & links*, WCAG AA 4.5:1). design-tokens 0.1.9 (installed) provides `--warning-text`.
-**Remediation / evidence:** remove the unused rule, or switch the text colour to `var(--warning-text)`.
-Browser contrast of this app's own screens is not checked per theme and season (the ui gallery axe gate
+**Remediation / evidence:** the unused `.dao-notice` rule is removed from `qt.css`; `tests/design-tokens-used.test.ts`
+fails if any `.vue` or `.css` file under `src/` sets `color: var(--warning)`, and also checks that every
+custom property the app reads is defined by design-tokens (0.1.10). Browser contrast of this app's own screens is not checked per theme and season (the ui gallery axe gate
 covers the shared components only).
 
 ### F12 — No `LICENSE` file although the package declares 0BSD
 
-**Severity:** Info   **Disposition:** DEFERRED (next patch release; add the file)
+**Severity:** Info   **Disposition:** RESOLVED (0.0.18; commit pending — `LICENSE` added)
 **Where:** repository root; `package.json` (`"license": "0BSD"`); `npm pack --dry-run` 2026-10-09
 **Issue:** the repository has no `LICENSE` file, so the published tarball carries only the SPDX id.
 access-gate-ui, seal-ui, walrus-ui and token-deployer-ui ship one. (dao-ui lacks it too.)
 **Impact:** documentation and tooling only: licence scanners and consumers read the file; 0BSD asks for
 no attribution, and the image serves the bundled dependencies' notices (F9).
-**Remediation / evidence:** add the 0BSD text (as in the sibling repositories); `files` then picks it up
-automatically.
+**Remediation / evidence:** `LICENSE` holds the 0BSD text exactly as in access-gate-ui (copyright MeddleWare);
+npm includes it in the tarball automatically (`npm pack --dry-run` 2026-10-18 lists `LICENSE` and
+`CHANGELOG.md`).
 
 ### F13 — `connect-src` allows any https origin
 
@@ -253,7 +256,7 @@ break white-label builds. Revisit when the hosts are fixed for mainnet.
 
 ### F14 — The npm publish gate is a subset of CI
 
-**Severity:** Low   **Disposition:** ACCEPTED-RISK
+**Severity:** Low   **Disposition:** RESOLVED (0.0.18; commit pending — `npm-publish.yml` `verify` calls `node-ci.yml`)
 **Where:** `.github/workflows/npm-publish.yml`
 **Issue:** the npm job's `verify` runs `npm ci`, the audit gate, type-check and the unit tests, not the
 full CI workflow (linters, licence check). The image release (F9) does run the full workflow on the
@@ -261,9 +264,10 @@ same tag.
 **Impact:** a tag could publish the source package while the image job refuses the same commit. The
 package is source only (`npm pack --dry-run` 2026-10-09: `src`, `index.html`, `vite.config.ts`,
 `tsconfig.json`, README; no tests, fixtures or `.env*`).
-**Remediation / evidence:** accepted: a source mirror for the dashboard, OIDC-published with provenance,
-tag == version checked, idempotent, and gated on the `NPM_PUBLISH` variable. Calling `node-ci.yml` from
-`npm-publish.yml` would close it; not required for safety.
+**Remediation / evidence:** `verify` is now `uses: ./.github/workflows/node-ci.yml` (type-check, all three
+linters, tests, build, licences, audit gate), as in the image release and access-gate-ui. The publish job
+still builds, checks tag == version, publishes idempotently with provenance, and stays gated on the
+`NPM_PUBLISH` variable. Verified by reading the workflow 2026-10-18.
 
 ### F15 — The cosign identity pins the repository, not the workflow
 
@@ -313,9 +317,9 @@ verifies signatures, so it would not run).
 | TS | Compiler strictness | HOLDS — `strict: true`, `vue-tsc --noEmit` in CI; `noUncheckedIndexedAccess` is not enabled (the app parses no untrusted data itself); `skipLibCheck: true` hides nothing in `src/` |
 | TS | Assertions, validation, money, network I/O, dynamic code | HOLDS — no `any`, `!`, `eval` or `fetch` in `src/`; the one cast is `activeTab as keyof …` over a fixed tab map; the app makes no network call of its own |
 | TS | Promise handling | HOLDS — the only empty `catch` (`useEpoch`) is commented and non-security (status bar shows "Epoch —") |
-| TS | Strictness, exports, `files`, supply chain | HOLDS (F6) — `files` whitelist (`npm pack --dry-run` clean); `npm ci`; audit gate; the unit tests are not run in CI (F10); no `LICENSE` file (F12) |
+| TS | Strictness, exports, `files`, supply chain | HOLDS (F6) — `files` whitelist (`npm pack --dry-run` clean); `npm ci`; audit gate; the unit tests run in CI and both release gates (F10); `LICENSE` file present (F12) |
 | VUE | Untrusted rendering | HOLDS (I3) |
-| VUE | Colour & links | GAP (latent) — `--warning` as text in an unused rule (F11) |
+| VUE | Colour & links | HOLDS (F11) — the unused rule is removed; `design-tokens-used.test.ts` forbids `--warning` as text |
 | VUE | Build-time configuration | HOLDS — every variable in `.env.example`; defaults match the Dockerfile and README |
 | VUE | Test hooks | N/A — none; no test mode exists |
 | VUE | Signing UX | N/A — nothing is signed |
@@ -334,14 +338,14 @@ verifies signatures, so it would not run).
 
 | Dependency | Pinned version | Liveness dependency? | CVE / audit status | Notes |
 | --- | --- | --- | --- | --- |
-| `@meddleware/access-gate-client` | `^0.0.8` (installed 0.0.8) | every read | clean 2026-10-09 | latest |
+| `@meddleware/access-gate-client` | `^0.0.9` (installed 0.0.9) | every read | clean 2026-10-18 | latest |
 | `@meddleware/wallet-adapter` | peer `>=0.0.12 <0.2.0`; dev `^0.0.17` | client | own audit | host's copy |
-| `@meddleware/ui` / `design-tokens` / `eslint-config` | `^0.1.31` / `^0.1.9` / `^0.0.2` | UI | own audits | latest published |
-| `@mysten/sui` | `^2.33.2` (installed 2.35.0) | reads | `npm audit` gate 2026-10-09: only the allowlisted advisory | one copy (`npm ls`); ADR-0001 baseline `^2.33.1` |
+| `@meddleware/ui` / `design-tokens` / `eslint-config` | `^0.1.31` / `^0.1.10` / `^0.0.2` | UI | own audits | latest published |
+| `@mysten/sui` | `^2.36.0` (installed 2.36.0) | reads | `npm audit` gate 2026-10-09: only the allowlisted advisory | one copy (`npm ls`); ADR-0001 baseline `^2.33.1` |
 | Vue / Vite / TypeScript / vitest | 3.5.43 / 8.3 / 6.0.3 / 5.0.3 (plugin-vue 6.0.9, vue-tsc 3.3.x) | build | clean | TypeScript 7 and vitest 5-major follow-ups declined (decision); Node 24 LTS |
 | Sui full node | public gRPC (wallet-adapter) | every panel | Mysten | fails closed (each panel shows its error) |
 | Read-indexer (`sui-indexer.meddleware.co.uk`) | https, optional `VITE_INDEXER_URL` | activity feed | own audit | display data; falls back to the full node after 3 s |
-| `static-server` / `node:24-slim` | 0.1.7 / digest-pinned | runtime / build | Trivy at release (F9); Go 1.26.9 | — |
+| `static-server` / `node:24-slim` | 0.1.8 / digest-pinned | runtime / build | Trivy at release (F9); Go 1.26.9 | — |
 | dev tooling | lockfile | no | GHSA-vfj7-8cjw-p6xm allowlisted to 2027-01-01 | TS lens B.TS-3 |
 
 Shared-dependency matrix (TS lens): `@mysten/sui` dep `^2.33.2` (baseline `^2.33.1`, within range);
@@ -352,7 +356,7 @@ wallet-adapter peer range is `>=0.0.12 <0.2.0`, no `legacy-peer-deps`.
 
 Install-time code (TS B.TS-2): the lockfile has one lifecycle script, `fsevents` 2.3.3 (dev, optional,
 macOS only); no `allowScripts`, no `overrides`; no `prepare`/`postinstall` in `package.json`. `files`:
-`src`, `index.html`, `vite.config.ts`, `tsconfig.json` (and a `CHANGELOG.md` entry that matches no file).
+`src`, `index.html`, `vite.config.ts`, `tsconfig.json` (plus `CHANGELOG.md` and `LICENSE`, both present from 0.0.18).
 
 ### B.2 Publish authority, capabilities & secret custody
 
@@ -369,7 +373,7 @@ workflow and job (`id-token`/`attestations` only on the merge-and-sign job, `id-
 publish job); OIDC publish with a tag == version check and an idempotent registry check; npm client
 pinned (`npm@11.20.0`); image release = full CI via `workflow_call` + Trivy + cosign + SPDX SBOM
 attestation + provenance, multi-arch signed at the merged index digest, no `continue-on-error` on the
-public path (F9; the CI workflow lacks the tests, F10; the npm gate is a subset, F14); `npm ci`
+public path (F9; the CI workflow runs the tests, F10; the npm gate calls it, F14); `npm ci`
 everywhere; audit gate in CI and the npm job; Dependabot weekly and grouped for npm, Docker and Actions
 (`.github/dependabot.yml`); no test-only build mode exists, so there is nothing to scan for; no job
 spends real funds.
@@ -419,14 +423,13 @@ Trivy *config* scan of the Dockerfile and manifests (F9).
 
 ## Section C — Test-coverage & hermetic/live split
 
-### C.1 Coverage grade — B (12/12, 2026-10-09)
+### C.1 Coverage grade — B (27/27, 2026-10-18)
 
-Vitest 5.0.3, 2 files: `composables.test.ts` (activity, platform config, gates, treasury balance) and
-`explorer-url.test.ts`. Activity merge and decoding through the real client, gate discovery and its
+Vitest 5.0.3, 3 files: `composables.test.ts` (activity, platform config, gates, treasury balance),
+`explorer-url.test.ts` and `design-tokens-used.test.ts` (no `--warning` text colour, tokens exist; F11). Activity merge and decoding through the real client, gate discovery and its
 failure paths, platform config, explorer links, and the treasury balance (total, ordering, clearing).
 No component tests (the tabs hold formatting only) and no Playwright suite. Gating variables: none; the
-suite is hermetic. The suite is not run by `node-ci.yml` or by the image release (F10); the npm job
-runs it.
+suite is hermetic. The suite runs in `node-ci.yml`, so in the image release and the npm job (F10, F14).
 
 ### C.2 Hermetic vs. live paths
 
@@ -434,7 +437,7 @@ runs it.
 | --- | --- | --- | --- |
 | Composables over a mocked core client | yes | — | `npm test` |
 | Live reads | no | testnet | access-gate-client `GRPC_TESTNET` read and drift suites (PASS 2026-10-09 against the new package); live bundle and headers read 2026-10-09 |
-| Browser contrast (axe) of this app's own screens | no | `@meddleware/ui` gallery covers shared components only | F11 |
+| Browser contrast (axe) of this app's own screens | no | `@meddleware/ui` gallery covers shared components only | F11 (the static guard is hermetic) |
 
 ## Section D — Deployment-readiness gates
 
@@ -450,8 +453,8 @@ runs it.
 - [x] `SECURITY.md` present and accurate (F5)
 - [x] image: digest-pinned bases, non-root, restricted pod, probes and limits, deployed by digest, signed with SBOM and provenance, scanned before signing (F9)
 - [x] consumed IDs are the latest on-chain version — live bundle carries `0xd7ddaa94…` and `0x3f81489d…` only (B.SC-1)
-- [ ] every test project runs in CI — F10 (next patch)
-- [ ] colour: no warning text below AA on the light theme — F11 (latent, next patch)
+- [x] every test project runs in CI — F10 (`node-ci.yml` `npm test` since `fd41da4`; `npm-publish.yml` `verify` calls it from 0.0.18; commit pending)
+- [x] colour: no warning text below AA on the light theme — F11 (unused `.dao-notice` removed; `tests/design-tokens-used.test.ts`; 0.0.18, commit pending)
 
 ### pre-mainnet
 
@@ -478,9 +481,9 @@ runs it.
   or executed). SC-M1: reads use `originalId` from the recorded deployment. SC-M5: network, ids and
   client follow one selector; missing ids fail closed.
 - **TS-M1–TS-M9** — hold. TS-M9: `@mysten/sui` is a single copy; wallet-adapter is a peer. The lens's
-  Section C rule that every test project runs in CI is not met (F10).
+  Section C rule that every test project runs in CI is met (F10, 0.0.18).
 - **VUE-M1–VUE-M9** — hold (VUE-M3, M4, M5, M6, M7 N/A: no test hooks, signing, wallet state or
-  storage); the *Colour & links* category has one latent defect (F11).
+  storage); the *Colour & links* category holds (F11 fixed in 0.0.18).
 - **IMG-M1–IMG-M8** — hold; IMG-M8's verification command pins the repository only (F15).
 
 ## Implementation suggestions (SHOULD / MAY)
@@ -526,3 +529,15 @@ None.
   matrix added; D gates updated. Counts: 16 findings — 6 RESOLVED (F3–F7, F9), 2 Positive (F1, F2),
   1 ADJUDICATED (F8), 3 ACCEPTED-RISK (F13–F15), 4 DEFERRED (F10–F12 next patch; F16 maintainer);
   tests 12/12, `vue-tsc`, three linters and the audit gate green.
+- 2026-10-18 — fix wave, 0.0.18 (commit pending): dependencies `@meddleware/access-gate-client` ^0.0.9,
+  `@meddleware/design-tokens` ^0.1.10, `@mysten/sui` ^2.36.0; image base static-server 0.1.8
+  (`sha256:e32cf42b…4000`, digest read from quay.io 2026-10-18). F10 RESOLVED (`node-ci.yml` runs
+  `npm test` since `fd41da4`; the `docker-publish.yml` comment is now accurate), F11 RESOLVED (unused
+  `.dao-notice` rule removed; `tests/design-tokens-used.test.ts`), F12 RESOLVED (`LICENSE`, 0BSD),
+  F14 RESOLVED (`npm-publish.yml` `verify` calls `node-ci.yml`); `CHANGELOG.md` created (the `files` list
+  named it). F13 stays ACCEPTED-RISK (the allowed hosts are operator-configured per network; no single
+  fix without breaking white-label builds), F15 stays ACCEPTED-RISK (the single fix is a
+  `COSIGN_IDENTITY_REGEXP` override in the workspace `verify-digests.sh` — outside this repository),
+  F16 stays the maintainer item. Counts: 16 findings — 10 RESOLVED (F3–F7, F9–F12, F14), 2 Positive
+  (F1, F2), 1 ADJUDICATED (F8), 2 ACCEPTED-RISK (F13, F15), 1 DEFERRED (F16, maintainer). Tests 27/27,
+  type-check, all three linters, build, licence check and the audit gate pass.

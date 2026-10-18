@@ -164,16 +164,6 @@
   margin: 0 0 6px;
 }
 
-.dao-notice {
-  padding: 8px 10px;
-  border: 1px solid var(--warning);
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--warning) 10%, transparent);
-  color: var(--warning);
-  font-size: 0.78rem;
-  margin-bottom: 10px;
-}
-
 .dao-placeholder {
   text-align: center;
   padding: 24px 16px;
