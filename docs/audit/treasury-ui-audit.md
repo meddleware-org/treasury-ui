@@ -54,8 +54,9 @@ the first pass:
   RESOLVED)** the unit tests run in `node-ci.yml` and so in both release gates; **F11 (Info, RESOLVED)**
   the unused `.dao-notice` rule that drew `--warning` as text is removed and a test pins it; **F12 (Info,
   RESOLVED)** the 0BSD `LICENSE` file is added.
-- Accepted or maintainer items: **F13** blanket `connect-src https:`, **F15** the cosign identity pins the repository not the workflow (both ACCEPTED-RISK; **F14**, the npm
-  job's gate being a subset of CI, is RESOLVED in 0.0.18),
+- Accepted or maintainer items: **F13** blanket `connect-src https:` (ACCEPTED-RISK); **F15** the cosign identity pinned the repository, not the
+  workflow (RESOLVED 2026-10-18: the workspace `verify-digests.sh` default is now workflow-anchored); **F14**, the npm
+  job's gate being a subset of CI, is RESOLVED in 0.0.18,
   **F16** registry mirror and credential inventory (DEFERRED, maintainer); **F8** records that the
   balance and epoch reads are made directly through the core client (ADJUDICATED).
 
@@ -271,13 +272,17 @@ still builds, checks tag == version, publishes idempotently with provenance, and
 
 ### F15 — The cosign identity pins the repository, not the workflow
 
-**Severity:** Info   **Disposition:** ACCEPTED-RISK
+**Severity:** Info   **Disposition:** RESOLVED (2026-10-18, workspace `verify-digests.sh` default; was ACCEPTED-RISK)
 **Where:** `bootstrap/images/verify-digests.sh` (workspace); this repository publishes no verify command
-**Issue:** the cluster check accepts any workflow identity of `github.com/meddleware-org/treasury-ui`.
-**Impact:** a workflow added by someone with write access could sign an image the check would accept.
-**Remediation / evidence:** the repository is the signing boundary; anchoring to
-`docker-publish.yml@refs/tags/v*` is a `COSIGN_IDENTITY_REGEXP` override in the workspace script. The
-deployed digests verified 2026-10-09 (0.0.17) and 2026-10-18 (0.0.18), 16/16 both times; the 2026-10-18 run used the workflow-anchored identity `docker-publish.yml@refs/tags/v*`, which is narrower than the repository-wide check this finding describes (disposition left to the workspace audit).
+**Issue:** the cluster check accepted any workflow identity of `github.com/meddleware-org/treasury-ui`.
+**Impact:** a workflow added by someone with write access could have signed an image the check would accept.
+**Remediation / evidence:** fixed in the workspace script on 2026-10-18: the default identity in
+`bootstrap/images/verify-digests.sh` is now `^https://github\.com/meddleware-org/${name}/\.github/workflows/docker-publish\.yml@refs/tags/v`
+(`COSIGN_IDENTITY_REGEXP` still overrides it), so a signature from any other workflow or ref of the repository is
+rejected. All 16 deployed and contingency images verified valid against it on 2026-10-18
+(`STRICT=0 bash bootstrap/images/verify-digests.sh`, 0.0.18 included); 2026-10-09 (0.0.17) was
+checked with the earlier repository-wide identity. This repository publishes no verify command, so the script
+default was the only remaining problem.
 
 ### F16 — Self-hosted registry mirror and registry credentials
 
@@ -329,7 +334,7 @@ verifies signatures, so it would not run).
 | VUE | Dual app / library | HOLDS — `TreasuryView` imports its own scoped `qt.css` and has no shell chrome |
 | VUE | Estimates | HOLDS — amounts are read from the chain; the 4-digit display rounding is a formatter, not an estimate |
 | IMG | Base images, build context, reproducible build, no secrets, runtime user, scan, SBOM and notices | HOLDS (F9) — digest-pinned `node:24-slim` and static-server 0.1.8 (0.1.7 in the 0.0.17 image); `.dockerignore` excludes `node_modules`, `dist`, `.git`, `.github`, `.env*.local`; `npm ci`; no secret in any `ARG`/`ENV`; Trivy before cosign; lockfile in the image; `/THIRD_PARTY_LICENSES` served |
-| IMG | Verification command | GAP accepted — the identity pins the repository (F15) |
+| IMG | Verification command | HOLDS — this repository publishes no command; the cluster check pins `docker-publish.yml@refs/tags/v` (F15, RESOLVED 2026-10-18) |
 | IMG | Deployment pinning | HOLDS — digest in `config/images.yaml` and the overlay; the base manifest's tag label (`0.1.0`) is overridden by the overlay digest and is cosmetic |
 
 ## Section B — Supply-chain, publish-authority & capability matrix
@@ -484,7 +489,7 @@ suite is hermetic. The suite runs in `node-ci.yml`, so in the image release and 
   Section C rule that every test project runs in CI is met (F10, 0.0.18).
 - **VUE-M1–VUE-M9** — hold (VUE-M3, M4, M5, M6, M7 N/A: no test hooks, signing, wallet state or
   storage); the *Colour & links* category holds (F11 fixed in 0.0.18).
-- **IMG-M1–IMG-M8** — hold; IMG-M8's verification command pins the repository only (F15).
+- **IMG-M1–IMG-M8** — hold; IMG-M8 holds: no command is published here and the cluster check pins the publish workflow and tag refs (F15, RESOLVED 2026-10-18).
 
 ## Implementation suggestions (SHOULD / MAY)
 
@@ -536,9 +541,10 @@ None.
   `.dao-notice` rule removed; `tests/design-tokens-used.test.ts`), F12 RESOLVED (`LICENSE`, 0BSD),
   F14 RESOLVED (`npm-publish.yml` `verify` calls `node-ci.yml`); `CHANGELOG.md` created (the `files` list
   named it). F13 stays ACCEPTED-RISK (the allowed hosts are operator-configured per network; no single
-  fix without breaking white-label builds), F15 stays ACCEPTED-RISK (the single fix is a
-  `COSIGN_IDENTITY_REGEXP` override in the workspace `verify-digests.sh` — outside this repository),
+  fix without breaking white-label builds), F15 was ACCEPTED-RISK at this point (the single fix is a
+  workspace `verify-digests.sh` change — outside this repository; made later the same day, see the last entry),
   F16 stays the maintainer item. Counts: 16 findings — 10 RESOLVED (F3–F7, F9–F12, F14), 2 Positive
-  (F1, F2), 1 ADJUDICATED (F8), 2 ACCEPTED-RISK (F13, F15), 1 DEFERRED (F16, maintainer). Tests 27/27,
+  (F1, F2), 1 ADJUDICATED (F8), 2 ACCEPTED-RISK (F13, F15; F15 superseded by the last entry), 1 DEFERRED (F16, maintainer). Tests 27/27,
   type-check, all three linters, build, licence check and the audit gate pass.
 - 2026-10-18 — released and deployed (`v0.0.18` = `5f07179`, `0.0.18@sha256:d9a2f3aa27cb041d8fd69558a7cbd904331b58b15e2c4f9ecf42a17621c88b21`), verified live. Cosign keyless signature verified against the workflow-anchored identity (`verify-digests.sh` 16/16); published to npm and as an image; rollout (`apply.sh treasury-ui`) succeeded; the page loads in headless Chromium with no console errors or CSP violations, headers present (re-read with `curl -I`), and the live bundle carries only the current ids. F16, the mainnet and external-review gates unchanged.
+- 2026-10-18 — F15 (cosign identity) RESOLVED: the default identity in `bootstrap/images/verify-digests.sh` is now workflow-anchored (`^https://github\.com/meddleware-org/${name}/\.github/workflows/docker-publish\.yml@refs/tags/v`); all 16 deployed and contingency images verified valid against it (`STRICT=0 bash bootstrap/images/verify-digests.sh`). This repository publishes no verify command, so nothing else remained. Counts: 16 findings — 11 RESOLVED (F3–F7, F9–F12, F14, F15), 2 Positive (F1, F2), 1 ADJUDICATED (F8), 1 ACCEPTED-RISK (F13), 1 DEFERRED (F16, maintainer).
