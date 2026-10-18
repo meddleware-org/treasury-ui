@@ -13,16 +13,16 @@
 **Hosting:** container image on static-server (CSP and HSTS from the server); no static-host `_headers` file
 **Embedding hosts:** the dashboard (`TreasuryView`, own scoped `qt.css`, no shell chrome; dashboard requires `^0.0.16`)
 **VITE_\* inventory:** `VITE_NETWORK` (testnet|mainnet, baked, selects the network only), `VITE_INDEXER_URL` (optional read-indexer base URL, baked, display data), `VITE_DOCS_URL` / `VITE_DEV_URL` (footer links, baked); all public, none selects an on-chain id; all four are in `.env.example`
-**Images:** `quay.io/meddleware-org/treasury-ui:0.0.17@sha256:8e155ce3…b259` deployed (0.0.18 is committed, not yet released; Docker Hub mirror; cosign keyless, SPDX SBOM attestation, build provenance; verified 2026-10-09, `verify-digests.sh` 16/16)
-**Base images:** build `node:24-slim@sha256:0e0ff40c…f9b6`; runtime `quay.io/meddleware-org/static-server:0.1.8@sha256:e32cf42b…4000` (0.1.7 in the deployed 0.0.17 image)
+**Images:** `quay.io/meddleware-org/treasury-ui:0.0.18@sha256:d9a2f3aa27cb041d8fd69558a7cbd904331b58b15e2c4f9ecf42a17621c88b21` (Docker Hub mirror, same digest; cosign keyless signature verified 2026-10-18 against the workflow-anchored identity, `verify-digests.sh` 16/16; SPDX SBOM attestation, build provenance). Superseded 0.0.17 was `sha256:8e155ce3…b259`
+**Base images:** build `node:24-slim@sha256:0e0ff40c…f9b6`; runtime `quay.io/meddleware-org/static-server:0.1.8@sha256:e32cf42b…4000` (0.0.18 is built on 0.1.8; the 0.0.17 image deployed 2026-10-09 carried 0.1.7)
 **Runtime user:** `USER 65534:65534`   **Runtime FS:** read-only root, no writable mounts
 **Deployed by:** `post-bootstrap/treasury-ui/overlays/default`; digest from `config/images.yaml`
 **Build args:** `VITE_NETWORK`, `VITE_INDEXER_URL` and `CSP` — none secret, none a test switch
-**Deployment status:** npm v0.0.17 (2026-10-09); image `quay.io/meddleware-org/treasury-ui` serving `treasury.meddleware.co.uk` at 0.0.17 (`sha256:8e155ce3…`, deployed 2026-10-09; live bundle carries only `access_gate` `0xd7ddaa94…` and PlatformConfig `0x3f81489d…`); embedded in dashboard 0.1.84
-**Review date:** 2026-10-03 (first pass) · re-verified 2026-10-09
+**Deployment status:** npm v0.0.18 (2026-10-18); image `quay.io/meddleware-org/treasury-ui` serving `treasury.meddleware.co.uk` at 0.0.18 (`sha256:d9a2f3aa…8b21`; release tag `v0.0.18` = `5f07179`; released, signature verified and deployed 2026-10-18, rollout succeeded; 0.0.17 `sha256:8e155ce3…` was deployed 2026-10-09; live headers re-checked 2026-10-18; live bundle carries only `access_gate` `0xd7ddaa94…` and PlatformConfig `0x3f81489d…`, none of the superseded ids, checked 2026-10-18); embedded in dashboard 0.1.85
+**Review date:** 2026-10-03 (first pass) · re-verified 2026-10-09 · fix wave 2026-10-18 (0.0.18, released and deployed)
 **Reviewer:** Internal review
 **Severity ceiling:** Low — read-only; nothing is signed and no wallet is needed.
-**Status:** re-verified 2026-10-09; fix wave 2026-10-18 (0.0.18)
+**Status:** re-verified 2026-10-09; fix wave 2026-10-18 (0.0.18; released and deployed 2026-10-18, signature verified, rollout succeeded)
 
 ---
 
@@ -191,11 +191,11 @@ runs Trivy on the merged digest (CRITICAL/HIGH, fixable only, `exit-code: 1`) be
 an SPDX SBOM attestation and build provenance for quay.io and Docker Hub, with no `continue-on-error`
 on the public path; the Dockerfile runs `npm run licenses` in the build stage and copies
 `package-lock.json` to `/usr/share/doc/treasury-ui/`; `/THIRD_PARTY_LICENSES` returns HTTP 200 on the
-live site (2026-10-09) and CI runs `check:licenses`; the runtime base is static-server 0.1.7 (Go 1.26.9)
+live site (2026-10-09) and CI runs `check:licenses`; the runtime base is static-server 0.1.7 (Go 1.26.9) at the 2026-10-09 review (0.1.8 in 0.0.18)
 with an explicit `USER 65534:65534`; the pod sets `automountServiceAccountToken: false`, `runAsNonRoot`
 uid 65534, read-only root, all capabilities dropped, `RuntimeDefault` seccomp, probes and limits; the
 digest is identical in `config/images.yaml` and the overlay; all images cosign-verified 2026-10-09
-(`verify-digests.sh`, 16/16). Not run: a Trivy *config* scan of the Dockerfile and manifests (the image
+and again 2026-10-18 (`verify-digests.sh`, 16/16 both times). Not run: a Trivy *config* scan of the Dockerfile and manifests (the image
 scan runs at release).
 
 ### F10 — Unit tests are not run by CI or by the release gate
@@ -277,7 +277,7 @@ still builds, checks tag == version, publishes idempotently with provenance, and
 **Impact:** a workflow added by someone with write access could sign an image the check would accept.
 **Remediation / evidence:** the repository is the signing boundary; anchoring to
 `docker-publish.yml@refs/tags/v*` is a `COSIGN_IDENTITY_REGEXP` override in the workspace script. The
-deployed digest verified 2026-10-09 (16/16).
+deployed digests verified 2026-10-09 (0.0.17) and 2026-10-18 (0.0.18), 16/16 both times; the 2026-10-18 run used the workflow-anchored identity `docker-publish.yml@refs/tags/v*`, which is narrower than the repository-wide check this finding describes (disposition left to the workspace audit).
 
 ### F16 — Self-hosted registry mirror and registry credentials
 
@@ -328,7 +328,7 @@ verifies signatures, so it would not run).
 | VUE | Lazy boundaries | N/A — no heavy SDK or wasm |
 | VUE | Dual app / library | HOLDS — `TreasuryView` imports its own scoped `qt.css` and has no shell chrome |
 | VUE | Estimates | HOLDS — amounts are read from the chain; the 4-digit display rounding is a formatter, not an estimate |
-| IMG | Base images, build context, reproducible build, no secrets, runtime user, scan, SBOM and notices | HOLDS (F9) — digest-pinned `node:24-slim` and static-server 0.1.7; `.dockerignore` excludes `node_modules`, `dist`, `.git`, `.github`, `.env*.local`; `npm ci`; no secret in any `ARG`/`ENV`; Trivy before cosign; lockfile in the image; `/THIRD_PARTY_LICENSES` served |
+| IMG | Base images, build context, reproducible build, no secrets, runtime user, scan, SBOM and notices | HOLDS (F9) — digest-pinned `node:24-slim` and static-server 0.1.8 (0.1.7 in the 0.0.17 image); `.dockerignore` excludes `node_modules`, `dist`, `.git`, `.github`, `.env*.local`; `npm ci`; no secret in any `ARG`/`ENV`; Trivy before cosign; lockfile in the image; `/THIRD_PARTY_LICENSES` served |
 | IMG | Verification command | GAP accepted — the identity pins the repository (F15) |
 | IMG | Deployment pinning | HOLDS — digest in `config/images.yaml` and the overlay; the base manifest's tag label (`0.1.0`) is overridden by the overlay digest and is cosmetic |
 
@@ -393,15 +393,15 @@ component, not a frame.
 
 ### B.VUE-2 Build inputs and artifacts / IMG
 
-`node:24-slim@sha256:0e0ff40c…` builder and `static-server:0.1.7@sha256:2e227311…` runtime, both
+`node:24-slim@sha256:0e0ff40c…` builder and `static-server:0.1.8@sha256:e32cf42b…4000` runtime (0.0.18; the 0.0.17 image carried 0.1.7), both
 digest-pinned (Dependabot Docker group); `npm ci`; `.dockerignore` excludes local installs, build output,
 VCS data and every `.env*.local`; `npm run build && npm run licenses` run in the build stage; the runtime
 stage copies `dist` and the lockfile only; `USER 65534:65534`; no secret in any `ARG`/`ENV` (the build
 args are the public `VITE_NETWORK` and `VITE_INDEXER_URL` values and the CSP); production sourcemaps are
 not emitted (Vite default); the deployment is read-only root, `runAsNonRoot` uid 65534, no privilege
 escalation, all capabilities dropped, `RuntimeDefault` seccomp, `automountServiceAccountToken: false`,
-readiness and liveness probes on `/`, requests 5m/16Mi and limits 100m/48Mi; digest `sha256:8e155ce3…`
-in both `config/images.yaml` and the overlay; cosign signature verified 2026-10-09 (F15). Not run: a
+readiness and liveness probes on `/`, requests 5m/16Mi and limits 100m/48Mi; digest `sha256:d9a2f3aa…8b21`
+(0.0.18; 0.0.17 was `sha256:8e155ce3…`) in both `config/images.yaml` and the overlay; cosign signature verified 2026-10-09 (0.0.17) and 2026-10-18 (0.0.18) (F15). Not run: a
 Trivy *config* scan of the Dockerfile and manifests (F9).
 
 ### B.SC-1 ID-constant trace
@@ -449,7 +449,7 @@ suite is hermetic. The suite runs in `node-ci.yml`, so in the image release and 
 
 ### pre-testnet
 
-- [x] deployed with digest pinning; CSP and HSTS verified live 2026-10-09
+- [x] deployed with digest pinning; CSP and HSTS verified live 2026-10-09 and again on 0.0.18 on 2026-10-18 (`curl -I`: CSP, HSTS, `nosniff`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`)
 - [x] `SECURITY.md` present and accurate (F5)
 - [x] image: digest-pinned bases, non-root, restricted pod, probes and limits, deployed by digest, signed with SBOM and provenance, scanned before signing (F9)
 - [x] consumed IDs are the latest on-chain version — live bundle carries `0xd7ddaa94…` and `0x3f81489d…` only (B.SC-1)
@@ -541,3 +541,4 @@ None.
   F16 stays the maintainer item. Counts: 16 findings — 10 RESOLVED (F3–F7, F9–F12, F14), 2 Positive
   (F1, F2), 1 ADJUDICATED (F8), 2 ACCEPTED-RISK (F13, F15), 1 DEFERRED (F16, maintainer). Tests 27/27,
   type-check, all three linters, build, licence check and the audit gate pass.
+- 2026-10-18 — released and deployed (`v0.0.18` = `5f07179`, `0.0.18@sha256:d9a2f3aa27cb041d8fd69558a7cbd904331b58b15e2c4f9ecf42a17621c88b21`), verified live. Cosign keyless signature verified against the workflow-anchored identity (`verify-digests.sh` 16/16); published to npm and as an image; rollout (`apply.sh treasury-ui`) succeeded; the page loads in headless Chromium with no console errors or CSP violations, headers present (re-read with `curl -I`), and the live bundle carries only the current ids. F16, the mainnet and external-review gates unchanged.
