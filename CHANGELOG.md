@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 [Semantic Versioning](https://semver.org/). Before 0.2.0, breaking changes ship as patch releases.
 Releases before 0.0.18 are recorded in the git history only.
 
+## [0.0.19] - 2026-10-22
+
+### Changed
+
+- @meddleware/access-gate-client ^0.0.10: a stale indexer head page (polledAt older than 60 s) now falls back to the node
+
 ## [0.0.18] - 2026-10-18
 
 ### Added
