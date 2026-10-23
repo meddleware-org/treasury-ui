@@ -236,7 +236,7 @@ covers the shared components only).
 **Severity:** Info   **Disposition:** RESOLVED (0.0.18; commit `518e0d1` — `LICENSE` added)
 **Where:** repository root; `package.json` (`"license": "0BSD"`); `npm pack --dry-run` 2026-10-09
 **Issue:** the repository has no `LICENSE` file, so the published tarball carries only the SPDX id.
-access-gate-ui, seal-ui, walrus-ui and token-deployer-ui ship one. (dao-ui lacks it too.)
+access-gate-ui, sealed-storage-ui, walrus-storage-ui and token-issuance-ui ship one. (dao-ui lacks it too.)
 **Impact:** documentation and tooling only: licence scanners and consumers read the file; 0BSD asks for
 no attribution, and the image serves the bundled dependencies' notices (F9).
 **Remediation / evidence:** `LICENSE` holds the 0BSD text exactly as in access-gate-ui (copyright MeddleWare);

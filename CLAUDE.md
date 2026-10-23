@@ -67,7 +67,7 @@ accounting; DAO is framed as governance.
 
 ## Dual app + library
 
-Like `dao-ui`/`seal-ui`, this package is **both** a standalone SPA (`App.vue` + `main.ts`,
+Like `dao-ui`/`sealed-storage-ui`, this package is **both** a standalone SPA (`App.vue` + `main.ts`,
 `vite build`) and a library (`src/index.ts` exports `TreasuryView`, resolved via `"exports"`). The
 dashboard imports `TreasuryView` and wraps it in its own shell + shared wallet. `TreasuryView`
 imports its own `qt.css`, so no consumer needs this package's global CSS.
