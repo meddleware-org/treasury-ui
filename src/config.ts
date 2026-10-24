@@ -4,7 +4,7 @@
 import { computed } from 'vue'
 import { useNetwork } from '@meddleware/wallet-adapter'
 import { accessGateDeployment, type AccessGateDeployment } from '@meddleware/access-gate-client/deployments'
-import type { SuiNetwork } from '@meddleware/ui'
+import { withRuntimeEnv, type SuiNetwork } from '@meddleware/ui'
 
 /** The active network (read-only ref; the standalone build selects `VITE_NETWORK` in main.ts). */
 export const network = useNetwork().network
@@ -22,4 +22,5 @@ export function requireDeployment(): AccessGateDeployment {
 }
 
 /** Optional read-indexer (display data only; reads fall back to the full node). */
-export const INDEXER_URL: string = import.meta.env.VITE_INDEXER_URL || ''
+// The indexer is a machine-zone endpoint: a runtime override (/runtime-config.json, ADR-0005) wins.
+export const INDEXER_URL: string = withRuntimeEnv(import.meta.env).VITE_INDEXER_URL || ''

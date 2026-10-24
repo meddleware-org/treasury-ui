@@ -1,0 +1,10 @@
+# Treasury
+
+> Read-only accounting of the platform's on-chain revenue streams (access-pass commissions and fees) on Sui.
+
+Address: https://treasury.meddleware.co.uk
+
+## Documentation
+
+- [User guide](https://docs.meddleware.co.uk/blockchain/sui/treasury/)
+- [Reference](https://docs.meddleware.co.uk/blockchain/sui/treasury/reference)
