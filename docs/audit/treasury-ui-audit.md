@@ -19,7 +19,7 @@
 **Deployed by:** `post-bootstrap/treasury-ui/overlays/default`; digest from `config/images.yaml`
 **Build args:** `VITE_NETWORK`, `VITE_INDEXER_URL` and `CSP` — none secret, none a test switch
 **Deployment status:** npm v0.0.18 (2026-10-18); image `quay.io/meddleware-org/treasury-ui` serving `treasury.meddleware.co.uk` at 0.0.18 (`sha256:d9a2f3aa…8b21`; release tag `v0.0.18` = `5f07179`; released, signature verified and deployed 2026-10-18, rollout succeeded; 0.0.17 `sha256:8e155ce3…` was deployed 2026-10-09; live headers re-checked 2026-10-18; live bundle carries only `access_gate` `0xd7ddaa94…` and PlatformConfig `0x3f81489d…`, none of the superseded ids, checked 2026-10-18); embedded in dashboard 0.1.85
-**Review date:** 2026-10-03 (first pass) · re-verified 2026-10-09 · fix wave 2026-10-18 (0.0.18, released and deployed); 0.0.22 re-verified 2026-10-30 (Point the developer-docs and indexer links at the machine zone (ADR-0005); current @meddleware packages)
+**Review date:** 2026-10-03 (first pass) · re-verified 2026-10-09 · fix wave 2026-10-18 (0.0.18, released and deployed); 0.0.22 re-verified 2026-10-30 (Point the developer-docs and indexer links at the machine zone (ADR-0005); current @meddleware packages); 0.0.23 re-verified 2026-10-30 (Dependency updates (minor and patch groups) and workflow action bumps)
 **Reviewer:** Internal review
 **Severity ceiling:** Low — read-only; nothing is signed and no wallet is needed.
 **Status:** re-verified 2026-10-09; fix wave 2026-10-18 (0.0.18; released and deployed 2026-10-18, signature verified, rollout succeeded)

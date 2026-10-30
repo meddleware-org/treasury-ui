@@ -5,6 +5,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 [Semantic Versioning](https://semver.org/). Before 0.2.0, breaking changes ship as patch releases.
 Releases before 0.0.18 are recorded in the git history only.
 
+## [0.0.23] - 2026-10-30
+
+- Dependency updates (minor and patch groups) and workflow action bumps. No source change.
+
 ## [0.0.22] - 2026-10-30
 
 - Point the developer-docs and indexer links at the machine zone (ADR-0005); current @meddleware packages.
