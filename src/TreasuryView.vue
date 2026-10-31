@@ -6,12 +6,8 @@
 // Framing: the treasury is organisation-level. Blockchain (Sui today) is one revenue
 // stream among potentially many — the tabs are structured so more can be added later.
 // There is deliberately no governance/proposals surface here (that lives in dao-ui).
-//
-// qt.css is imported here (not just in main.ts) so the styles are included when the
-// view is consumed as a library by the dashboard or any other host.
-import './styles/qt.css'
-import { ref, computed } from 'vue'
-import { AppTabNav, UiStatusBar, UiTabPanel, UiToolbar, type AppTab } from '@meddleware/ui'
+import { computed, ref } from 'vue'
+import { AppTabNav, UiStatusBar, UiTabPanel, type AppTab } from '@meddleware/ui'
 import OverviewTab from './tabs/OverviewTab.vue'
 import AccountsTab from './tabs/AccountsTab.vue'
 import ActivityTab from './tabs/ActivityTab.vue'
@@ -33,24 +29,39 @@ const TAB_COMPONENTS = {
   activity: ActivityTab,
 }
 
-const activeComponent = computed(
-  () => TAB_COMPONENTS[activeTab.value as keyof typeof TAB_COMPONENTS],
-)
+const activeComponent = computed(() => TAB_COMPONENTS[activeTab.value as keyof typeof TAB_COMPONENTS])
 
-const { lastRefresh, error: eventsError } = useTreasuryActivity(1)
+// The status bar and the tabs share one feed and one epoch: opening a tab does not fetch them again.
+const { lastRefresh, error: eventsError } = useTreasuryActivity()
 const { epoch } = useEpoch()
 </script>
 
 <template>
-  <div class="treasury-view">
-    <UiToolbar :actions="[{ id: 'home', label: '🏦 Meddleware Treasury' }]" @action="activeTab = 'overview'" />
+  <section class="treasury-view" aria-labelledby="treasury-title">
+    <h2 id="treasury-title"><span aria-hidden="true">🏦</span> Meddleware Treasury</h2>
 
     <AppTabNav v-model="activeTab" :tabs="TABS" id-prefix="treasury" variant="raised" aria-label="Treasury sections" />
 
-    <UiTabPanel id-prefix="treasury" :tab="activeTab" class="dao-content">
+    <UiTabPanel id-prefix="treasury" :tab="activeTab">
       <component :is="activeComponent" />
     </UiTabPanel>
 
     <UiStatusBar :network="network" :healthy="!eventsError" :epoch="epoch" :last-refresh="lastRefresh" />
-  </div>
+  </section>
 </template>
+
+<style scoped>
+.treasury-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  min-height: 0;
+  flex: 1;
+}
+
+h2 {
+  margin: 0;
+  font-size: var(--font-size-md);
+}
+</style>

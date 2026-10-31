@@ -1,4 +1,3 @@
 // Library entry point. Hosts (e.g. the dashboard) import TreasuryView to render the
-// treasury console inline against a shared wallet. TreasuryView self-imports its
-// scoped qt.css, so no consumer needs this package's global CSS.
+// treasury console inline against a shared wallet. The host provides the design tokens and the ui reset.
 export { default as TreasuryView } from './TreasuryView.vue'

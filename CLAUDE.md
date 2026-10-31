@@ -40,20 +40,24 @@ accounting; DAO is framed as governance.
   selector (the standalone `main.ts` selects `VITE_NETWORK`). The ids come from
   `@meddleware/access-gate-client/deployments` for that network — never env, never literals. With
   no deployment for the network, composables report an error rather than querying.
-- **Shared qt components.** The desktop-console look comes from `@meddleware/ui` (UiPanel,
-  UiToolbar/UiToolbarButton, UiStatusBar/UiStatusDot, UiDataTable, UiStatGrid/UiStatRow, UiBadge,
-  UiActivityFeed/UiActivityItem, `AppTabNav variant="raised"` + `UiTabPanel`, `UiStatusBar` with its
-  network/epoch/refresh props). Only small app-local utility classes remain in `styles/qt.css`.
-- **Semantic markup, no inline styles.** Presentation lives in `qt.css` or scoped `<style>` blocks,
-  never `style=""` attributes; `npm run lint:html` (html-validate) enforces this.
+- **Shared qt components.** The desktop-console look comes from `@meddleware/ui` (UiPanel, UiStatusBar,
+  UiDataTable, UiStatGrid/UiStatRow, UiBadge, UiAmount, UiPager, UiFieldHint, UiLiveStatus, UiEmptyState,
+  UiActivityFeed/UiActivityItem, `AppTabNav variant="raised"` + `UiTabPanel`). There is no stylesheet of
+  this repo's own: layout is a few scoped rules in the components, all in design tokens.
+- **One read per fact, shared by every tab.** The platform config, the gates, the epoch and the event feed are
+  loaded once and shared at module level (`composables/chainContext.ts`: concurrent callers join one load, a later
+  caller gets the result, a change of network clears it); the status bar and the tabs read the same feed. Amounts are
+  exact (`UiAmount`, bigint digits), the commission is `commissionPct` from `usePlatformConfig`.
+- **Semantic markup, no inline styles.** Presentation lives in scoped `<style>` blocks, never `style=""`
+  attributes; `npm run lint:html` (html-validate) enforces this.
 
 ## Key files
 
 | File | Purpose |
 | --- | --- |
 | `src/config.ts` | The active `network` (wallet-adapter selector), `explorerNetwork`, `requireDeployment()` (ids from access-gate-client `deployments`), optional `INDEXER_URL`. |
-| `src/wallet.ts` | Shim over `@meddleware/wallet-adapter`; `getSuiClient()` for bare reads. |
-| `src/TreasuryView.vue` | Core tool UI — tab shell (Overview / Accounts / Activity) + status bar. Self-imports `styles/qt.css`; exported from `src/index.ts`. |
+| `src/wallet.ts` | `createToolWallet(...)` from `@meddleware/wallet-adapter`; `getSuiClient()` for bare reads. |
+| `src/TreasuryView.vue` | Core tool UI — tab shell (Overview / Accounts / Activity) + status bar. A `section` with its heading; exported from `src/index.ts`. |
 | `src/index.ts` | Library entry — exports `TreasuryView`. |
 | `src/App.vue` | Standalone shell only: `AppHeader` + `<TreasuryView>` + `AppFooter` (+ CopyrightLine). |
 | `src/composables/usePlatformConfig.ts` | Reads `PlatformConfig` → `{ treasury, commissionBps }`. |
@@ -69,8 +73,8 @@ accounting; DAO is framed as governance.
 
 Like `dao-ui`/`sealed-storage-ui`, this package is **both** a standalone SPA (`App.vue` + `main.ts`,
 `vite build`) and a library (`src/index.ts` exports `TreasuryView`, resolved via `"exports"`). The
-dashboard imports `TreasuryView` and wraps it in its own shell + shared wallet. `TreasuryView`
-imports its own `qt.css`, so no consumer needs this package's global CSS.
+dashboard imports `TreasuryView` and wraps it in its own shell + shared wallet. A host
+provides the design tokens and the `@meddleware/ui` reset, as for every embedded tool.
 
 ## What NOT to do
 

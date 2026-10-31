@@ -1,107 +1,82 @@
 <script setup lang="ts">
-// History tab: paginated on-chain access-gate event log (sold / used / burned) with
-// per-row explorer links. Data comes from useTreasuryActivity (pruning-tolerant, merged feed).
-import { ref, computed } from 'vue'
-import { useTreasuryActivity } from '../composables/useTreasuryActivity.js'
-import {
-  CopyableAddress,
-  ExplorerLink,
-  suiExplorerUrl,
-  UiDataTable,
-  UiBadge,
-  UiToolbarButton,
-} from '@meddleware/ui'
+// History tab: paginated on-chain access-gate event log (sold / used) with per-row explorer links. Data comes from
+// useTreasuryActivity (pruning-tolerant, merged feed).
+import { computed, ref } from 'vue'
+import { CopyableAddress, ExplorerLink, UiBadge, UiButton, UiDataTable, UiFieldHint, UiNotice, UiPager, UiPanel } from '@meddleware/ui'
+import { suiExplorerUrl } from '@meddleware/web-utils'
+import { useTreasuryActivity, type TreasuryEvent } from '../composables/useTreasuryActivity.js'
 import { explorerNetwork } from '../config.js'
-import type { TreasuryEvent } from '../composables/useTreasuryActivity.js'
 
-const { events, loading, error, reload, indexedFromCheckpoint } = useTreasuryActivity(200)
+const { events, loading, error, reload, indexedFromCheckpoint } = useTreasuryActivity()
 
 const PAGE_SIZE = 20
-const page = ref(1)
+const page = ref(0)
 
-const totalPages = computed(() => Math.max(1, Math.ceil(events.value.length / PAGE_SIZE)))
-const pageEvents = computed(() =>
-  events.value.slice((page.value - 1) * PAGE_SIZE, page.value * PAGE_SIZE),
-)
-
-function prevPage() { if (page.value > 1) page.value-- }
-function nextPage() { if (page.value < totalPages.value) page.value++ }
+const hasNext = computed(() => (page.value + 1) * PAGE_SIZE < events.value.length)
+const pageEvents = computed(() => events.value.slice(page.value * PAGE_SIZE, (page.value + 1) * PAGE_SIZE))
 
 const eventLabel: Record<TreasuryEvent['type'], string> = {
   AccessMinted: 'Access Sold',
   AccessConsumed: 'Access Used',
 }
-
-function badgeVariant(type: TreasuryEvent['type']): 'active' | 'closed' {
-  return type === 'AccessMinted' ? 'active' : 'closed'
-}
 </script>
 
 <template>
-  <header class="activity__head">
-    <h2 class="dao-section-title">Revenue Events</h2>
-    <UiToolbarButton :disabled="loading" @click="reload">
-      {{ loading ? 'Loading…' : 'Refresh' }}
-    </UiToolbarButton>
-  </header>
+  <UiPanel title="Revenue Events">
+    <p class="bar">
+      <span v-if="indexedFromCheckpoint" class="muted">Indexed since checkpoint {{ indexedFromCheckpoint }}.</span>
+      <UiButton variant="secondary" :busy="loading" @click="reload">{{ loading ? 'Loading…' : 'Refresh' }}</UiButton>
+    </p>
+    <UiNotice v-if="error" type="error" :message="error" />
 
-  <p v-if="error" class="dao-muted">{{ error }}</p>
-  <p v-if="indexedFromCheckpoint" class="dao-muted">Indexed since checkpoint {{ indexedFromCheckpoint }}.</p>
+    <UiDataTable caption="Revenue events" empty="No events found." :rows="loading ? pageEvents.length || 1 : pageEvents.length">
+      <template #head>
+        <th scope="col">Type</th>
+        <th scope="col">
+          Address
+          <UiFieldHint field-id="activity-address">The buyer of a sold pass, or the holder who used one. Click to view in explorer; click the copy icon to copy the full address.</UiFieldHint>
+        </th>
+        <th scope="col">
+          Block
+          <UiFieldHint field-id="activity-block">Sui checkpoint sequence number — equivalent to a block height in other blockchains. Each checkpoint finalizes a batch of transactions; higher numbers are more recent.</UiFieldHint>
+        </th>
+        <th scope="col">
+          Transaction
+          <UiFieldHint field-id="activity-tx">Transaction digest — a unique identifier for the transaction that emitted this event. Click to view in explorer; click the copy icon to copy the full digest.</UiFieldHint>
+        </th>
+      </template>
+      <tr v-for="ev in pageEvents" :key="ev.txDigest">
+        <td><UiBadge :tone="ev.type === 'AccessMinted' ? 'ok' : 'neutral'">{{ eventLabel[ev.type] }}</UiBadge></td>
+        <td class="mw-mono">
+          <CopyableAddress v-if="ev.address" :address="ev.address">
+            <ExplorerLink :href="suiExplorerUrl('account', ev.address, explorerNetwork)" :value="ev.address" />
+          </CopyableAddress>
+          <template v-else>—</template>
+        </td>
+        <td class="mw-mono">{{ ev.checkpoint ? '#' + ev.checkpoint : '—' }}</td>
+        <td class="mw-mono">
+          <CopyableAddress :address="ev.txDigest" label="Copy transaction">
+            <ExplorerLink :href="suiExplorerUrl('txblock', ev.txDigest, explorerNetwork)" :value="ev.txDigest" />
+          </CopyableAddress>
+        </td>
+      </tr>
+    </UiDataTable>
 
-  <UiDataTable v-if="pageEvents.length || loading" :empty="'No events'">
-    <template #head>
-      <th>Type</th>
-      <th>
-        Address
-        <abbr class="dao-info" title="The buyer of a sold pass, or the holder who used one. Click to view in explorer; click the copy icon to copy the full address.">?</abbr>
-      </th>
-      <th>
-        Block
-        <abbr class="dao-info" title="Sui checkpoint sequence number — equivalent to a block height in other blockchains. Each checkpoint finalizes a batch of transactions; higher numbers are more recent.">?</abbr>
-      </th>
-      <th>
-        Transaction
-        <abbr class="dao-info" title="Transaction digest — a unique identifier for the transaction that emitted this event. Click to view in explorer; click the copy icon to copy the full digest.">?</abbr>
-      </th>
-    </template>
-    <tr v-for="ev in pageEvents" :key="ev.txDigest">
-      <td><UiBadge :variant="badgeVariant(ev.type)">{{ eventLabel[ev.type] }}</UiBadge></td>
-      <td class="dao-mono activity__cell dao-nowrap">
-        <CopyableAddress v-if="ev.address && ev.address !== 'undefined'" :address="ev.address">
-          <ExplorerLink :href="suiExplorerUrl('account', ev.address, explorerNetwork)" :value="ev.address" />
-        </CopyableAddress>
-        <span v-else>—</span>
-      </td>
-      <td class="dao-mono activity__cell">
-        {{ ev.checkpoint ? '#' + ev.checkpoint : '—' }}
-      </td>
-      <td class="dao-mono activity__cell dao-nowrap">
-        <CopyableAddress :address="ev.txDigest" label="Copy transaction">
-          <ExplorerLink :href="suiExplorerUrl('txblock', ev.txDigest, explorerNetwork)" :value="ev.txDigest" />
-        </CopyableAddress>
-      </td>
-    </tr>
-  </UiDataTable>
-  <p v-else-if="!loading" class="dao-placeholder">No events found.</p>
-
-  <nav v-if="totalPages > 1" class="dao-pagination" aria-label="Event pages">
-    <UiToolbarButton :disabled="page === 1" @click="prevPage">← Prev</UiToolbarButton>
-    <span class="dao-muted">Page {{ page }} / {{ totalPages }}</span>
-    <UiToolbarButton :disabled="page === totalPages" @click="nextPage">Next →</UiToolbarButton>
-  </nav>
+    <UiPager :index="page" :has-next="hasNext" label="Event pages" @prev="page--" @next="page++" />
+  </UiPanel>
 </template>
 
 <style scoped>
-.activity__head {
+.bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-xs);
 }
-.activity__head .dao-section-title {
-  margin: 0;
-}
-.activity__cell {
-  font-size: 0.72rem;
+
+.muted {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
 }
 </style>

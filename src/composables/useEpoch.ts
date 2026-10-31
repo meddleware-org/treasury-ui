@@ -1,22 +1,30 @@
 import { ref } from 'vue'
+import { createGeneration } from '@meddleware/web-utils'
 import { getSuiClient } from '../wallet.js'
-import { latest, onChainContext } from './chainContext.js'
+import { onChainContext, shared } from './chainContext.js'
 
-export function useEpoch() {
-  const epoch = ref<number | null>(null)
-  const begin = latest()
+// One epoch for the whole console: the status bar and anything else that shows it read the same value.
+const epoch = ref<number | null>(null)
+const generation = createGeneration()
 
-  async function load() {
-    const current = begin()
+const loader = shared(
+  async () => {
+    const current = generation.begin()
     try {
       const res = await getSuiClient().getCurrentSystemState()
       if (current()) epoch.value = Number(res.systemState.epoch)
+      return true
     } catch {
-      // non-fatal — status bar shows "Epoch —"
+      return false // non-fatal — the status bar shows "Epoch —"
     }
-  }
+  },
+  () => {
+    generation.invalidate()
+    epoch.value = null
+  },
+)
 
-  onChainContext(load, () => (epoch.value = null))
-
-  return { epoch, reload: load }
+export function useEpoch() {
+  onChainContext(loader)
+  return { epoch, reload: () => loader.load(true) }
 }

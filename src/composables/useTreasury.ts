@@ -3,17 +3,17 @@
 // usePlatformConfig resolves; clears to null while the address is unknown or unreadable. A slower,
 // older read never overwrites a newer one.
 import { ref, watch } from 'vue'
+import { createGeneration, errorMessage } from '@meddleware/web-utils'
 import { getSuiClient } from '../wallet.js'
-import { latest } from './chainContext.js'
 
 export function useTreasury(treasuryAddress: () => string | null) {
   const balance = ref<bigint | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const begin = latest()
+  const generation = createGeneration()
 
   async function load(address: string) {
-    const current = begin()
+    const current = generation.begin()
     loading.value = true
     error.value = null
     try {
@@ -22,7 +22,7 @@ export function useTreasury(treasuryAddress: () => string | null) {
     } catch (e) {
       if (!current()) return
       balance.value = null
-      error.value = e instanceof Error ? e.message : String(e)
+      error.value = errorMessage(e)
     } finally {
       if (current()) loading.value = false
     }
@@ -34,7 +34,7 @@ export function useTreasury(treasuryAddress: () => string | null) {
       if (addr) {
         void load(addr)
       } else {
-        begin()
+        generation.invalidate()
         balance.value = null
         loading.value = false
       }

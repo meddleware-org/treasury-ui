@@ -1,6 +1,6 @@
 // F11: --warning is the bright yellow fill (2.0:1 on the light canvas), so it must never be a text colour;
-// text uses --warning-text. The check reads every stylesheet and component, because the shared qt.css is
-// exported with TreasuryView and a host would inherit a bad rule. It also checks that every custom
+// text uses --warning-text. The check reads every stylesheet and component, because a host that embeds TreasuryView
+// would inherit a bad rule. It also checks that every custom
 // property the app reads is one design-tokens defines (or the file defines itself): an undefined name
 // falls through to a literal fallback that ignores the theme and season.
 import { describe, it, expect } from 'vitest'
@@ -29,7 +29,8 @@ const files = sourceFiles(join(import.meta.dirname, '..', 'src'))
 describe('design tokens in the app styles', () => {
   it('finds the components and stylesheets', () => {
     expect(files.length).toBeGreaterThan(0)
-    expect(files.some((f) => f.endsWith('qt.css'))).toBe(true)
+    expect(files.some((f) => f.endsWith('TreasuryView.vue'))).toBe(true)
+    expect(files.some((f) => f.endsWith('.css'))).toBe(false) // no stylesheet of its own: the ui reset and the components carry the look
   })
 
   it.each(files)('%s never uses --warning as a text colour (use --warning-text)', (file) => {
