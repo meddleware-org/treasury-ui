@@ -50,7 +50,8 @@ jobs:
       - name: Third-party licence notices
         run: npm run check:licenses && test -s dist/THIRD_PARTY_LICENSES
 
-      # Lighthouse runs on the production build; the browser tests then rebuild it in e2e mode (a mock wallet and a stub chain).
+      # Lighthouse runs on the production build; the browser tests build and serve the same production app with every request that leaves
+      # localhost refused (this console has no end-to-end mode: its chain reads fail and the page says so).
       - name: Lighthouse (accessibility 100, best practices, bundle budgets)
         run: npx lhci autorun
 

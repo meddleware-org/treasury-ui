@@ -14,22 +14,28 @@ export interface Shared {
 }
 
 export function shared(run: () => Promise<boolean>, clear: () => void): Shared {
-  let inflight: Promise<void> | null = null
+  // `reset()` starts a new epoch. A load belongs to the epoch it began in: a caller in a later epoch never joins it (its answer is for the
+  // previous network, and the view has already discarded it), and it never marks the later epoch done.
+  let epoch = 0
+  let inflight: { epoch: number; promise: Promise<void> } | null = null
   let done = false
   return {
     load(force = false) {
-      if (inflight) return inflight
+      if (inflight && inflight.epoch === epoch) return inflight.promise
       if (done && !force) return Promise.resolve()
-      inflight = run()
+      const mine = epoch
+      const promise: Promise<void> = run()
         .then((ok) => {
-          done = ok
+          if (mine === epoch) done = ok
         })
         .finally(() => {
-          inflight = null
+          if (inflight?.promise === promise) inflight = null
         })
-      return inflight
+      inflight = { epoch: mine, promise }
+      return promise
     },
     reset() {
+      epoch++
       done = false
       clear()
     },

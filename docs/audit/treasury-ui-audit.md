@@ -3,7 +3,7 @@
 **Classification:** Internal security review
 **Project:** `repos/treasury-ui` — `@meddleware/treasury-ui`, Vue 3 organisation treasury console (overview, accounts, activity; standalone SPA + `TreasuryView` library, embedded in the dashboard)
 **Project type:** Vue app + UI library
-**Template:** AUDIT_TEMPLATE.md (2026-10-08) + AUDIT_TEMPLATE_SUI_CLIENT.md (2026-10-08) + AUDIT_TEMPLATE_TS.md (2026-10-08) + AUDIT_TEMPLATE_VUE.md (2026-10-08) + AUDIT_TEMPLATE_IMG.md (2026-10-08)
+**Template:** AUDIT_TEMPLATE.md (2026-11-01) + AUDIT_TEMPLATE_SUI_CLIENT.md (2026-10-08) + AUDIT_TEMPLATE_TS.md (2026-11-01) + AUDIT_TEMPLATE_VUE.md (2026-11-01) + AUDIT_TEMPLATE_IMG.md (2026-10-08) + AUDIT_TEMPLATE_A11Y.md (2026-11-01)
 **Sui SDK:** `@mysten/sui ^2.36.0` (installed 2.36.0, one copy; `npm ls` single version)   **Transport:** gRPC through wallet-adapter; optional read-indexer over HTTPS
 **Networks:** testnet (recorded deployment); any other network reports "no deployment" instead of querying
 **On-chain packages consumed:** `access_gate` (reads only) through `@meddleware/access-gate-client/deployments` (0.0.9: testnet `0xd7ddaa94…88c9`, PlatformConfig `0x3f81489d…e7b5`; reads use `originalId`)
@@ -19,7 +19,7 @@
 **Deployed by:** `post-bootstrap/treasury-ui/overlays/default`; digest from `config/images.yaml`
 **Build args:** `VITE_NETWORK`, `VITE_INDEXER_URL` and `CSP` — none secret, none a test switch
 **Deployment status:** npm v0.0.18 (2026-10-18); image `quay.io/meddleware-org/treasury-ui` serving `treasury.meddleware.co.uk` at 0.0.18 (`sha256:d9a2f3aa…8b21`; release tag `v0.0.18` = `5f07179`; released, signature verified and deployed 2026-10-18, rollout succeeded; 0.0.17 `sha256:8e155ce3…` was deployed 2026-10-09; live headers re-checked 2026-10-18; live bundle carries only `access_gate` `0xd7ddaa94…` and PlatformConfig `0x3f81489d…`, none of the superseded ids, checked 2026-10-18); embedded in dashboard 0.1.85
-**Review date:** 2026-10-03 (first pass) · re-verified 2026-10-09 · fix wave 2026-10-18 (0.0.18, released and deployed); 0.0.22 re-verified 2026-10-30 (Point the developer-docs and indexer links at the machine zone (ADR-0005); current @meddleware packages); 0.0.23 re-verified 2026-10-30 (Dependency updates (minor and patch groups) and workflow action bumps); 0.0.24 re-verified 2026-10-31 (Shared chain context, ui components and accessibility gates)
+**Review date:** 2026-10-03 (first pass) · re-verified 2026-10-09 · fix wave 2026-10-18 (0.0.18, released and deployed); 0.0.22 released 2026-10-30 (Point the developer-docs and indexer links at the machine zone (ADR-0005); current @meddleware packages); 0.0.23 released 2026-10-30 (Dependency updates (minor and patch groups) and workflow action bumps); 0.0.24 released 2026-10-31 (Shared chain context, ui components and accessibility gates); frontend-wave delta review 2026-11-01 (real review of the 2026-10-19 → 2026-11-01 changes; see the delta section)
 **Reviewer:** Internal review
 **Severity ceiling:** Low — read-only; nothing is signed and no wallet is needed.
 **Status:** re-verified 2026-10-09; fix wave 2026-10-18 (0.0.18; released and deployed 2026-10-18, signature verified, rollout succeeded)
@@ -61,6 +61,8 @@ the first pass:
   balance and epoch reads are made directly through the core client (ADJUDICATED).
 
 The severity ceiling stays Low.
+
+**2026-11-01 update.** Between 0.0.21 and 0.0.24 the console was rebuilt on the shared components and a shared chain context. The review found a real defect in that context — a network change during the first load left the new network without data (F17, fixed in 0.0.25 with tests) — corrected a misleading CI comment (F18) and recorded that the sweep sees only the empty and error states because the console has no stub chain (F19, DEFERRED before mainnet).
 
 ## Threat model / trust boundaries
 
@@ -295,6 +297,47 @@ verifies signatures, so it would not run).
 **Remediation / evidence:** the mirror is listed as best-effort; the public jobs have no
 `continue-on-error`. The credential inventory (scope, holder, expiry, rotation) is the maintainer item.
 
+### Frontend wave delta review (2026-11-01) — 0.0.22 to 0.0.24 reviewed · 0.0.25 prepared
+
+Scope: the changes since the last substantive entry (2026-10-24, the runtime endpoint config): the console rebuilt from `@meddleware/ui` components (`UiDataTable`, `UiStatGrid`, the status bar), the shared chain context (`chainContext.ts`: one load per read, reset on a network change), `useTreasuryActivity` and `useGates` refactored on `@meddleware/web-utils` guards, the wallet binding on `createToolWallet`, the five-browser sweep and Lighthouse CI. The release tool's "re-verified" marks for these releases recorded no review; this section is the review. Read: `chainContext.ts`, `useTreasury.ts`, `useEpoch.ts`, `useGates.ts`, `useTreasuryActivity.ts`, `usePlatformConfig.ts`, the three tabs, `main.ts`, `vite.config.ts`, the workflows and the tests. Ran (with the locally packed `ui` 0.1.38, `design-tokens` 0.1.13, `web-utils` 0.0.2, `frontend-config` 0.0.2): the audit gate (0 not allowlisted; the two `extract-zip` advisories are allowlisted until 2027-01-31), `vue-tsc`, lint (stylelint, eslint, html-validate), `vitest` (4 files, 27 tests (23 before the fix below)), the production build, `npm pack --dry-run` (23 files, 37 KiB), and the browser suite on Chromium, Firefox, WebKit, a Pixel 7 and an iPhone 14 with the CI font (DejaVu Sans through fontconfig): **230 passed in 5.2 minutes**.
+
+### F17 — After a network change during the first load, the new network never loaded
+**Severity:** Medium   **Disposition:** RESOLVED
+**Where:** `src/composables/chainContext.ts::shared` (used by `useEpoch`, `useGates`, `usePlatformConfig` and the activity read)
+**Issue:** `shared` gives every component one load. A network change calls `reset()` (which clears the data and invalidates the guard of the load in progress) and then `load(true)`. But `load` returned the load already in flight before it looked at `force`, so the new network's call *joined the old network's load*: its answer was discarded by the generation guard, yet its `true` result marked the loader done. The new network then had no data (the status bar read "Epoch —", the tabs empty) and every later `load()` returned immediately because the loader was "done". Two new unit tests failed against the old code (the second run never started).
+**Impact:** switching between testnet and mainnet quickly after opening the console left the new network blank until a manual reload, with no error shown. A read-only console, so no funds are at risk, but the page presented an empty treasury as the state of the chain.
+**Remediation / evidence:** a load belongs to the epoch it began in: `reset()` starts a new epoch, a caller in a later epoch never joins an earlier load, and an earlier load never marks a later epoch done. `tests/chain-context.test.ts` (4 tests): one run for concurrent callers; a failure is not remembered as done; a network change while a load is in flight starts a new run; a late answer from the old network does not mark the new one done. 0.0.25.
+
+### F18 — The CI comment said the browser tests use an end-to-end mode this console does not have
+**Severity:** Info   **Disposition:** RESOLVED
+**Where:** `.github/workflows/node-ci.yml`
+**Issue:** the comment above the Lighthouse step said the browser tests rebuild the app "in e2e mode (a mock wallet and a stub chain)". Treasury-ui has no such mode (`src/` has no harness; `vite.config.ts` has no guard because there is nothing to guard); the tests build and serve the production app with every outside request refused.
+**Impact:** a reader would believe a stub chain was under test, and that a test-only code path exists to be guarded.
+**Remediation / evidence:** the comment states what runs. 0.0.25.
+
+### F19 — The sweep covers the empty and error states only: no state with loaded data
+**Severity:** Low   **Disposition:** DEFERRED
+**Where:** `e2e/a11y.spec.ts`, `e2e/open.ts`
+**Issue:** every chain read goes through the gRPC client (`getBalance`, `getCurrentSystemState`, object and event reads), which cannot be faked at the fetch layer (gRPC-web is binary). The sweep therefore refuses all outside requests and checks the three tabs as a visitor first meets them — the reads failing, the page saying so. A table with rows (long addresses and event lists at 320 px and at 200% text) is not swept here; the shared components it uses are (`ui`'s gallery, F23 there).
+**Impact:** a layout regression that appears only with data (a long address in a cell) would be caught by `ui`'s gallery or not at all; the wallet apps do not have this gap because their end-to-end build installs a stub chain.
+**Remediation / evidence:** exact remediation: add an end-to-end build mode as the wallet apps have (`VITE_E2E=1 vite build --mode e2e`, `assertE2eOnlyInE2eMode`, an `e2e.ts` loaded behind the mode-and-flag condition, `check-prod-bundle` in CI and the Dockerfile) with `createStubClient` extended by the four reads the console makes, then sweep the tabs with rows. Not done in this pass because it adds a test harness to a read-only app and needs the stub client extended in `@meddleware/wallet-adapter/testing`; gate: before mainnet (Section D).
+
+### F20 — Positive: no test harness exists to ship, and the stale-read guards are tested
+**Severity:** Positive
+**Where:** `src/composables/*.ts`, `tests/composables.test.ts`
+**Evidence:** a search of `src/` and `vite.config.ts` finds no end-to-end code, hook or alias, so the production-artefact scan the wallet apps run has nothing to look for; `useTreasury` and `useEpoch` begin a `createGeneration` per read and apply a result only if it is still current (`composables.test.ts`, 23 tests with the real client parsing objects and decoding events); the published tarball is 23 files (`src/` only: no tests, no e2e).
+
+### F21 — Positive: the shared sweep covers every screen and passes on five browsers with the CI font
+**Severity:** Positive
+**Where:** e2e/a11y.spec.ts (`defineA11ySuite`, AAA `gate`)
+**Evidence:** three tabs (Overview, Accounts, Activity) in their offline empty and error states — each at AA and AAA (gating) in all ten theme × season looks, at 320 px, 200% text, in forced colours, under reduced motion and by keyboard — on five browser projects: 230 tests passed with the CI font. See F19 for what that does not cover.
+
+### Delta notes (A11Y lens, `AUDIT_TEMPLATE_A11Y.md`)
+- **Support promise:** the shared browserslist (`@meddleware/frontend-config/browserslist-config`); build target through `viteTarget()`; compat lints on.
+- **Accessibility gates:** the shared sweep over three tabs (axe AA and AAA `gate`; 320 px reflow; 200% text; forced colours; reduced motion; keyboard incl. focus not obscured), Lighthouse CI on the production build, five browser projects in CI.
+- **Known exceptions:** none disabled; the loaded-data states are not swept (F19, DEFERRED); the 44 px enhanced target size, link purpose and screen-reader announcements are reviewed from screenshots, not automated.
+- **Supply chain:** `.github/audit-gate.mjs` with two dated `extract-zip` allowlist entries (dev-only, via `@lhci/cli`, expiry 2027-01-31, D104; OPERATOR_TASKS.md) and the `basic-ftp`/`tmp`/`zod` overrides; Dependabot (npm, Actions, Docker); `@meddleware/frontend-config` is a dev dependency (its audit F5).
+
 ## Section A — Invariant verification matrix
 
 | # | Invariant | Enforced at | Proven by | Status |
@@ -463,6 +506,8 @@ suite is hermetic. The suite runs in `node-ci.yml`, so in the image release and 
 
 ### pre-mainnet
 
+- [ ] the Overview, Accounts and Activity tabs are swept with loaded data (an end-to-end build with a stub chain) — F19
+
 - [ ] `access_gate` mainnet deployment recorded in access-gate-client, then a release — mainnet-blocked
 - [x] CSP and HSTS on the one hosting path (B.VUE-1)
 - [ ] registry credential inventory and rotation (F16) — `OPERATOR_TASKS.md` "Image registry credentials"
@@ -554,3 +599,4 @@ None.
   - `docker-publish.yml`: the private rebuild jobs are replaced by one `mirror-private` job that copies the published quay.io image (and its cosign artifacts) to the self-hosted registry by digest and fails unless the digest and the signature match (build once, promote by digest; committed locally, not yet released; the `PRIVATE_REGISTRY_*` credentials are still unset).
 - 2026-10-22 (audit close-out) — release 0.0.20 (`v0.0.20` = `c3dc501`; `Publish (Docker)` succeeded). Image base: static-server 0.1.11 (Go 1.26.10 standard library, CVE-2026-111943, so the scan-before-sign gate passes; static-server F13). 0.0.19 (`683011b`) took `@meddleware/access-gate-client` `^0.0.10` (a stale indexer head page, `polledAt` older than 60 s, now falls back to the node; sui-indexer F19). No disposition change. Not re-run in this pass: the unit tests, the build and the audit gate (the tag's own CI and publish runs succeeded).
 - 2026-10-24 — machine-zone readiness (workspace ADR-0005, C1z): endpoints read through `@meddleware/ui` `withRuntimeEnv`, loaded from a same-origin `/runtime-config.json` (strict key allowlist, https-only, no credentials/query/fragment; a missing, non-JSON or invalid file keeps the build values) before the app modules load; own `robots.txt` and `llms.txt`. Verified: one build served by static-server 0.1.11 with and without the file calls the configured indexer / falls back, 0 CSP violations, 0 page errors (headless Chromium).
+- 2026-11-01 — frontend-wave delta review of 0.0.22 to 0.0.24. Read the shared chain context and the read composables, the three tabs, the build configuration, the workflows and the tests; ran the gates and the five-browser suite with the CI font (230 passed in 5.2 minutes). Found and fixed F17 (a network change during the first load left the new network blank: the shared loader joined the old load; 4 new tests) and F18 (a CI comment described an e2e mode this console does not have); recorded F19 (the sweep covers empty and error states only: DEFERRED with the exact remediation) and F20–F21 as Positive. The release tool's bare "re-verified" marks were reworded to "released". `**Template:**` dates reconciled to the 2026-11-01 registry (TS/VUE changes add rows; the VUE colour row moved to A11Y, applied in full here) with no disposition change.
