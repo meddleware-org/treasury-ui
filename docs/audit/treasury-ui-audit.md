@@ -507,7 +507,6 @@ suite is hermetic. The suite runs in `node-ci.yml`, so in the image release and 
 ### pre-mainnet
 
 - [ ] the Overview, Accounts and Activity tabs are swept with loaded data (an end-to-end build with a stub chain) — F19
-
 - [ ] `access_gate` mainnet deployment recorded in access-gate-client, then a release — mainnet-blocked
 - [x] CSP and HSTS on the one hosting path (B.VUE-1)
 - [ ] registry credential inventory and rotation (F16) — `OPERATOR_TASKS.md` "Image registry credentials"
