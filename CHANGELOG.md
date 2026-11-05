@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 [Semantic Versioning](https://semver.org/). Before 0.2.0, breaking changes ship as patch releases.
 Releases before 0.0.18 are recorded in the git history only.
 
+## [0.0.25] - 2026-11-05
+
+### Fixed
+
+- The shared chain loader is scoped to the network epoch: switching network starts its own load instead of returning the previous network's data.
+
+### Changed
+
+- Dependency alignment: `@meddleware/ui` ^0.1.38 (form-field edge contrast, sticky-offset and focus-not-obscured fixes), `@meddleware/design-tokens` ^0.1.13, `@meddleware/web-utils` ^0.0.2 and `@meddleware/frontend-config` ^0.0.2 (the shared sweep now also checks that focus is not hidden behind fixed content).
+
 ## [0.0.24] - 2026-10-31
 
 - Shared chain context, ui components and accessibility gates
