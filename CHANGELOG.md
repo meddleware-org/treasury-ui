@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 [Semantic Versioning](https://semver.org/). Before 0.2.0, breaking changes ship as patch releases.
 Releases before 0.0.18 are recorded in the git history only.
 
+## [0.0.26] - 2026-11-06
+
+### Added
+
+- An end-to-end build mode (`npm run build:e2e`) with a stub chain, so the browser tests sweep the console WITH data (a balance, three gates, 26 events over two pages); `?chain=down` keeps the error states covered. Guarded as in the wallet apps: mode-and-flag gate, `assertE2eOnlyInE2eMode`, `check-prod-bundle` in CI and the image build, a refused production `VITE_E2E=1` build, `!src/e2e*.ts` in the tarball.
+
+### Changed
+
+- Takes `@meddleware/ui` ^0.1.39 (the tab list items use `role="none"`) and the Dependabot merges of 2026-11-06: image bases `static-server` 0.1.12 and a refreshed `node` build image, and newer dev tools.
+
 ## [0.0.25] - 2026-11-05
 
 ### Fixed
