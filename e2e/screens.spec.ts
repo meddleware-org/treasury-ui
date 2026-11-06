@@ -2,4 +2,4 @@
 import { defineShots } from '@meddleware/frontend-config/shots'
 import { open } from './open.js'
 
-defineShots({ overview: open('Overview'), accounts: open('Accounts'), activity: open('Activity') })
+defineShots({ overview: open('Overview'), accounts: open('Accounts'), activity: open('Activity'), 'overview-down': open('Overview', { down: true }) })

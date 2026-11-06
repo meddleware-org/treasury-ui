@@ -83,3 +83,12 @@ provides the design tokens and the `@meddleware/ui` reset, as for every embedded
 - Do not require a wallet for reads. Reads use a bare `SuiClient`.
 - Do not hardcode Sui as the only revenue stream in the Accounts structure.
 - Do not hardcode or env-configure package/object ids; take them from `requireDeployment()`.
+
+## Tests and the end-to-end build
+
+`npm test` is Vitest (composables with the real client parsing objects, the chain context, the stub data). `npm run test:e2e` builds the **e2e variant**
+(`npm run build:e2e` = `VITE_E2E=1 vite build --mode e2e`) and runs the shared Playwright sweep over it: `src/e2e.ts` (loaded by `main.ts` only when the
+mode is `e2e` **and** `VITE_E2E=1`) installs the mock wallet and a stub chain with data — a platform config, three gates (one with a very long name),
+a large balance, an epoch and 26 events over two pages. `?chain=down` leaves the real client so the reads fail (the error states). Rules, as in the wallet
+apps: `vite.config.ts` calls `assertE2eOnlyInE2eMode`; `npm run check:bundle` (CI and the Dockerfile) fails if a hook reached the production bundle; CI proves a
+production build with `VITE_E2E=1` is refused; `!src/e2e*.ts` keeps the stub out of the tarball. If the client's parsers change, `tests/e2e-data.test.ts` fails first.
