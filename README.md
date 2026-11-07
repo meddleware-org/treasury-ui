@@ -12,7 +12,7 @@ Served at **`treasury.meddleware.co.uk`** and embedded in the Meddleware dashboa
 - **Overview** — treasury balance, commission rate, and a recent-activity snapshot.
 - **Accounts** — the Sui treasury account (address, balance, commission) and its revenue sources
   (community access gates). Structured as a list of accounts so more streams can join.
-- **Activity** — the paginated on-chain revenue-event log (access sold / used / burned).
+- **Activity** — the paginated on-chain revenue-event log (access sold / used).
 
 It is read-only: all figures come from Sui via a bare `SuiClient`; the app never holds custody or
 computes financial truth (that lives on-chain in the `access_gate` Move package).
@@ -25,11 +25,12 @@ npm run dev         # local dev server
 npm run type-check  # vue-tsc
 npm test            # vitest (composable merge/filter logic)
 npm run build       # type-check + vite build → dist/
+npm run test:e2e    # builds the e2e variant (a stub chain with data) and runs the Playwright sweep
 ```
 
 ## Dual app + library
 
-- **Standalone SPA:** `src/main.ts` mounts `App.vue` (`AppHeader` + `TreasuryView` + `AppFooter`).
+- **Standalone SPA:** `src/main.ts` mounts `App.vue` (the shared `AppToolShell` around `TreasuryView`).
 - **Library:** `src/index.ts` exports `TreasuryView` for inline embedding by the dashboard against a
   shared `@meddleware/wallet-adapter` connection. `TreasuryView` self-imports its scoped `qt.css`.
 

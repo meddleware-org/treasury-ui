@@ -37,7 +37,7 @@ accounting; DAO is framed as governance.
   `AccessConsumed` newest first through one module query, from the read-indexer when
   `VITE_INDEXER_URL` is set (display data; falls back to the full node). Do not parse here.
 - **One network source, one id source.** The network is wallet-adapter's shared `useNetwork()`
-  selector (the standalone `main.ts` selects `VITE_NETWORK`). The ids come from
+  selector (the standalone `main.ts` selects `VITE_NETWORK` with `selectBuiltNetwork`; `explorerNetwork` is wallet-adapter's `useNetwork().explorerNetwork`). The ids come from
   `@meddleware/access-gate-client/deployments` for that network — never env, never literals. With
   no deployment for the network, composables report an error rather than querying.
 - **Shared qt components.** The desktop-console look comes from `@meddleware/ui` (UiPanel, UiStatusBar,
@@ -48,6 +48,12 @@ accounting; DAO is framed as governance.
   loaded once and shared at module level (`composables/chainContext.ts`: concurrent callers join one load, a later
   caller gets the result, a change of network clears it); the status bar and the tabs read the same feed. Amounts are
   exact (`UiAmount`, bigint digits), the commission is `commissionPct` from `usePlatformConfig`.
+- **Plain words for a person, causes for the console (D117).** `src/availability.ts` owns every availability message: a network with no recorded
+  `access_gate` deployment reads "The treasury is not available on <network>. Switch to <the networks that have a record>." (the records decide, never
+  prose; `TreasuryView` then shows that instead of the tabs); any other failed read reads "The treasury cannot be read right now. Try again later." and
+  `plainFailure` writes the technical cause to the console once. A configured read-index that cannot be used still lists events from the node and says
+  "The event index is not available right now, so only recent events are listed."; the cause (`indexerError`) is logged. No page text names a `VITE_*`
+  variable, a script, "operator", "ckpt"/"bps"/"PlatformConfig" or the old "MeddleWare" spelling (`tests/wording.test.ts`).
 - **Semantic markup, no inline styles.** Presentation lives in scoped `<style>` blocks, never `style=""`
   attributes; `npm run lint:html` (html-validate) enforces this.
 
@@ -55,15 +61,16 @@ accounting; DAO is framed as governance.
 
 | File | Purpose |
 | --- | --- |
-| `src/config.ts` | The active `network` (wallet-adapter selector), `explorerNetwork`, `requireDeployment()` (ids from access-gate-client `deployments`), optional `INDEXER_URL`. |
+| `src/config.ts` | The active `network` (wallet-adapter selector), `explorerNetwork`, `requireDeployment()` (ids from access-gate-client `deployments`; throws `NotDeployedError` where none is recorded), optional `INDEXER_URL`. |
+| `src/availability.ts` | The plain availability messages, `plainFailure` (message for the page, cause to the console) and the `NotDeployedError` type. |
 | `src/wallet.ts` | `createToolWallet(...)` from `@meddleware/wallet-adapter`; `getSuiClient()` for bare reads. |
 | `src/TreasuryView.vue` | Core tool UI — tab shell (Overview / Accounts / Activity) + status bar. A `section` with its heading; exported from `src/index.ts`. |
 | `src/index.ts` | Library entry — exports `TreasuryView`. |
-| `src/App.vue` | Standalone shell only: `AppHeader` + `<TreasuryView>` + `AppFooter` (+ CopyrightLine). |
+| `src/App.vue` | Standalone shell only: `AppToolShell` (title "Treasury", slug `treasury`; the network badge in its `actions` slot) around `<TreasuryView>`. |
 | `src/composables/usePlatformConfig.ts` | Reads `PlatformConfig` → `{ treasury, commissionBps }`. |
 | `src/composables/useTreasury.ts` | Reads the treasury's SUI balance, reactive to the address getter. |
 | `src/composables/useGates.ts` | `AdminCap`-ownership discovery of revenue sources (gates). |
-| `src/composables/useTreasuryActivity.ts` | Merged, checkpoint-sorted revenue-event feed. |
+| `src/composables/useTreasuryActivity.ts` | Merged, checkpoint-sorted revenue-event feed (+ `notice` when the read-index could not be used). |
 | `src/composables/useEpoch.ts` | Current Sui epoch for the status bar (non-fatal on failure). |
 | `src/tabs/OverviewTab.vue` | Treasury balance + revenue activity + recent activity. |
 | `src/tabs/AccountsTab.vue` | The Sui treasury account + revenue sources (gates). |
@@ -90,5 +97,12 @@ provides the design tokens and the `@meddleware/ui` reset, as for every embedded
 (`npm run build:e2e` = `VITE_E2E=1 vite build --mode e2e`) and runs the shared Playwright sweep over it: `src/e2e.ts` (loaded by `main.ts` only when the
 mode is `e2e` **and** `VITE_E2E=1`) installs the mock wallet and a stub chain with data — a platform config, three gates (one with a very long name),
 a large balance, an epoch and 26 events over two pages. `?chain=down` leaves the real client so the reads fail (the error states). Rules, as in the wallet
-apps: `vite.config.ts` calls `assertE2eOnlyInE2eMode`; `npm run check:bundle` (CI and the Dockerfile) fails if a hook reached the production bundle; CI proves a
+apps: `vite.config.ts` is `meddlewareApp` (`@meddleware/frontend-config/vite`), which refuses `VITE_E2E` outside the e2e mode; `npm run check:bundle` (CI and the Dockerfile) fails if a hook reached the production bundle; CI proves a
 production build with `VITE_E2E=1` is refused; `!src/e2e*.ts` keeps the stub out of the tarball. If the client's parsers change, `tests/e2e-data.test.ts` fails first.
+
+## Shared tooling
+
+The build, test and lint plumbing comes from `@meddleware/frontend-config` (the `meddleware` section of `package.json` selects the `chain` Content-Security-Policy profile and
+Lighthouse CI): `meddlewareApp` / `vueTestConfig` / the `vue-app` tsconfig base, and the bins `mw-audit-gate`, `mw-third-party-licenses` (`npm run licenses` / `check:licenses`),
+`mw-check-csp-inline` (`npm run check:csp`, also a Dockerfile step) and `mw-sync` (`npx mw-sync --check` in CI keeps the Dockerfile CSP, `.dockerignore`, PostCSS/stylelint configs, Dependabot config
+and the audit allowlist equal to the templates; `--write` repairs them). Do not copy those scripts back into this repository.

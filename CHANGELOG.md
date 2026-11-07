@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 [Semantic Versioning](https://semver.org/). Before 0.2.0, breaking changes ship as patch releases.
 Releases before 0.0.18 are recorded in the git history only.
 
+## [0.0.27] - 2026-11-07
+
+### Changed
+
+- The console says plainly what it cannot show. A network with no recorded `access_gate` deployment reads "The treasury is not available on mainnet. Switch to testnet." (the networks offered come from the deployment records) and the tabs give way to that message; any other failed read reads "The treasury cannot be read right now. Try again later." instead of the raw error, and the technical cause is written to the console. When the read-index is configured but cannot be used, the events are still listed from the node and a note says only recent events are listed. A failed read of the revenue sources, the balance or the platform settings is now shown (it used to look like an empty list or a dash).
+- Words for a reader: the Overview's "ckpt 90000" is "checkpoint 90000"; the Activity column "Block" is "Checkpoint" with an explanation of what a checkpoint is, and the line above the table says from which checkpoint events are listed; the commission is shown as a percentage without "(20 bps)"; "Accesses minted/consumed" are "Passes sold/used", "Active gates" is "Gates" (it counted paused ones too), "PlatformConfig not loaded." is "No platform settings to show yet.", and the event labels read "Access sold" / "Access used" on both tabs. The package author and licence holder are spelled "Meddleware".
+- The standalone page is the shared `AppToolShell` of `@meddleware/ui` ^0.1.40 (page heading "Treasury"; the network badge stays in the header); the network comes from `selectBuiltNetwork` and `useNetwork().explorerNetwork` of `@meddleware/wallet-adapter` ^0.0.22, so the peer range is now `>=0.0.22 <0.2.0`. `TreasuryView` is exported unchanged.
+- Internal: Vite, Vitest and TypeScript configuration come from `@meddleware/frontend-config` ^0.0.7 (`meddlewareApp`, `vueTestConfig`, the `vue-app` tsconfig base; the e2e build mode and its stub chain are unchanged); the audit gate and the licence notices run its `mw-audit-gate` and `mw-third-party-licenses` (the local copies are deleted); `mw-sync --check` and an inline-script check against the Content-Security-Policy (`check:csp`, also a Dockerfile step) run in CI; `@meddleware/web-utils` ^0.0.3.
+- Tests for the shell, the availability messages and the console cause, the indexer note, the tabs' wording and the wording of every template and the page head.
+
 ## [0.0.26] - 2026-11-06
 
 ### Added

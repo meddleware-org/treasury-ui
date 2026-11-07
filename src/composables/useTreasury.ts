@@ -3,7 +3,8 @@
 // usePlatformConfig resolves; clears to null while the address is unknown or unreadable. A slower,
 // older read never overwrites a newer one.
 import { ref, watch } from 'vue'
-import { createGeneration, errorMessage } from '@meddleware/web-utils'
+import { createGeneration } from '@meddleware/web-utils'
+import { plainFailure } from '../availability.js'
 import { getSuiClient } from '../wallet.js'
 
 export function useTreasury(treasuryAddress: () => string | null) {
@@ -22,7 +23,7 @@ export function useTreasury(treasuryAddress: () => string | null) {
     } catch (e) {
       if (!current()) return
       balance.value = null
-      error.value = errorMessage(e)
+      error.value = plainFailure('the treasury balance', e)
     } finally {
       if (current()) loading.value = false
     }

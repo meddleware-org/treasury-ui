@@ -7,12 +7,13 @@
 // stream among potentially many — the tabs are structured so more can be added later.
 // There is deliberately no governance/proposals surface here (that lives in dao-ui).
 import { computed, ref } from 'vue'
-import { AppTabNav, UiStatusBar, UiTabPanel, type AppTab } from '@meddleware/ui'
+import { AppTabNav, UiNotice, UiStatusBar, UiTabPanel, type AppTab } from '@meddleware/ui'
 import OverviewTab from './tabs/OverviewTab.vue'
 import AccountsTab from './tabs/AccountsTab.vue'
 import ActivityTab from './tabs/ActivityTab.vue'
 import { useTreasuryActivity } from './composables/useTreasuryActivity.js'
 import { useEpoch } from './composables/useEpoch.js'
+import { isDeployed, notAvailableOn } from './availability.js'
 import { network } from './config.js'
 
 const TABS: AppTab[] = [
@@ -22,6 +23,9 @@ const TABS: AppTab[] = [
 ]
 
 const activeTab = ref('overview')
+
+// A network with no recorded deployment (the records decide, not prose) is not offered: say so and what to do, instead of tabs of empty cells.
+const unavailable = computed(() => (isDeployed(network.value) ? null : notAvailableOn(network.value)))
 
 const TAB_COMPONENTS = {
   overview: OverviewTab,
@@ -40,11 +44,14 @@ const { epoch } = useEpoch()
   <section class="treasury-view" aria-labelledby="treasury-title">
     <h2 id="treasury-title"><span aria-hidden="true">🏦</span> Meddleware Treasury</h2>
 
-    <AppTabNav v-model="activeTab" :tabs="TABS" id-prefix="treasury" variant="raised" aria-label="Treasury sections" />
+    <UiNotice v-if="unavailable" :message="unavailable" />
+    <template v-else>
+      <AppTabNav v-model="activeTab" :tabs="TABS" id-prefix="treasury" variant="raised" aria-label="Treasury sections" />
 
-    <UiTabPanel id-prefix="treasury" :tab="activeTab">
-      <component :is="activeComponent" />
-    </UiTabPanel>
+      <UiTabPanel id-prefix="treasury" :tab="activeTab">
+        <component :is="activeComponent" />
+      </UiTabPanel>
+    </template>
 
     <UiStatusBar :network="network" :healthy="!eventsError" :epoch="epoch" :last-refresh="lastRefresh" />
   </section>

@@ -1,5 +1,6 @@
 import { ref } from 'vue'
-import { createGeneration } from '@meddleware/web-utils'
+import { createGeneration, errorMessage } from '@meddleware/web-utils'
+import { logCause } from '../availability.js'
 import { getSuiClient } from '../wallet.js'
 import { onChainContext, shared } from './chainContext.js'
 
@@ -14,8 +15,10 @@ const loader = shared(
       const res = await getSuiClient().getCurrentSystemState()
       if (current()) epoch.value = Number(res.systemState.epoch)
       return true
-    } catch {
-      return false // non-fatal — the status bar shows "Epoch —"
+    } catch (e) {
+      // Non-fatal: the status bar shows "Epoch —"; the cause is for the developer.
+      logCause('reading the current epoch failed', errorMessage(e), 'warn')
+      return false
     }
   },
   () => {

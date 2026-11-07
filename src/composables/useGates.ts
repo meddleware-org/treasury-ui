@@ -2,8 +2,9 @@
 // with its Gate. A gate that cannot be read is left out rather than failing the list. One read serves every tab.
 import { ref } from 'vue'
 import { fetchAdminCaps, fetchGate, fetchPlatformConfig } from '@meddleware/access-gate-client'
-import { createGeneration, errorMessage } from '@meddleware/web-utils'
+import { createGeneration } from '@meddleware/web-utils'
 import { getSuiClient } from '../wallet.js'
+import { plainFailure } from '../availability.js'
 import { requireDeployment } from '../config.js'
 import { onChainContext, shared } from './chainContext.js'
 
@@ -41,7 +42,7 @@ const loader = shared(
     } catch (e) {
       if (!current()) return false
       gates.value = []
-      error.value = errorMessage(e)
+      error.value = plainFailure('the revenue sources', e)
       return false
     } finally {
       if (current()) loading.value = false

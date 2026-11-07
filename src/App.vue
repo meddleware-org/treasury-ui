@@ -1,36 +1,21 @@
 <script setup lang="ts">
-// Standalone shell for the Treasury SPA. The core UI lives in TreasuryView.vue (also
-// exported for inline embedding in the dashboard).
-import { AppFooter, AppHeader, ColorModeControl, CopyrightLine, UiAppShell, UiBadge, useColorMode } from '@meddleware/ui'
+// Standalone shell for the Treasury SPA: the shared tool shell (header, colour mode, footer) around the core tool view.
+// The core UI lives in TreasuryView.vue (also exported for inline embedding in the dashboard).
+import { AppToolShell, UiBadge } from '@meddleware/ui'
 import { network } from './config.js'
 import TreasuryView from './TreasuryView.vue'
 
-const { mode, set } = useColorMode('dark')
-const DOCS_URL = import.meta.env.VITE_DOCS_URL || 'https://docs.meddleware.co.uk/blockchain/sui/treasury/'
+const DOCS_URL = import.meta.env.VITE_DOCS_URL || undefined
+// The developer site has no treasury page: its Sui section is the landing point.
 const DEV_URL = import.meta.env.VITE_DEV_URL || 'https://meddleware.dev/sui/'
 </script>
 
 <template>
-  <UiAppShell contained>
-    <template #header>
-      <AppHeader variant="dark">
-        <template #brand>Meddleware Treasury</template>
-        <template #actions>
-          <UiBadge tone="info" :symbol="false">{{ network }}</UiBadge>
-          <ColorModeControl :model-value="mode" @update:model-value="set" />
-        </template>
-      </AppHeader>
+  <AppToolShell title="Treasury" slug="treasury" :docs-url="DOCS_URL" :dev-url="DEV_URL">
+    <template #actions>
+      <UiBadge tone="info" :symbol="false">{{ network }}</UiBadge>
     </template>
 
-    <h1 class="mw-visually-hidden">Meddleware Treasury</h1>
     <TreasuryView />
-
-    <template #footer>
-      <AppFooter :docs-url="DOCS_URL" :dev-url="DEV_URL">
-        <template #start>
-          <CopyrightLine symbol-variant="kopimi" organisation-name="Meddleware" rights-statement="jam" />
-        </template>
-      </AppFooter>
-    </template>
-  </UiAppShell>
+  </AppToolShell>
 </template>

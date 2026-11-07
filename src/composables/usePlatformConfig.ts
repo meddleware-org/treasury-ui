@@ -1,9 +1,10 @@
-// Reads the PlatformConfig shared object and exposes the treasury address + commission rate (bps).
+// Reads the PlatformConfig shared object and exposes the treasury address + commission rate (basis points on chain, shown as a percentage).
 // Source of truth for the commission model and for whose AdminCaps the gate discovery looks up. One read serves every tab.
 import { computed, ref } from 'vue'
 import { fetchPlatformConfig } from '@meddleware/access-gate-client'
-import { createGeneration, errorMessage } from '@meddleware/web-utils'
+import { createGeneration } from '@meddleware/web-utils'
 import { getSuiClient } from '../wallet.js'
+import { plainFailure } from '../availability.js'
 import { requireDeployment } from '../config.js'
 import { onChainContext, shared } from './chainContext.js'
 
@@ -33,7 +34,7 @@ const loader = shared(
     } catch (e) {
       if (!current()) return false
       config.value = null
-      error.value = errorMessage(e)
+      error.value = plainFailure('the platform settings', e)
       return false
     } finally {
       if (current()) loading.value = false
