@@ -512,7 +512,7 @@ suite is hermetic. The suite runs in `node-ci.yml`, so in the image release and 
 - [x] CSP and HSTS on the one hosting path (B.VUE-1)
 - [ ] registry credential inventory and rotation (F16) — `OPERATOR_TASKS.md` "Image registry credentials"
 - [ ] re-review if signing is ever added — standing condition
-- [ ] external review — maintainer item (`OPERATOR_TASKS.md` "Funding, grants and an external audit")
+- [ ] external review (ADR-0009 gate G4: not a launch gate; covered by redeploy and the audit pass) — maintainer item (`OPERATOR_TASKS.md` "Funding, grants and an external audit")
 
 ## Cross-project themes
 
