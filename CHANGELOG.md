@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 [Semantic Versioning](https://semver.org/). Before 0.2.0, breaking changes ship as patch releases.
 Releases before 0.0.18 are recorded in the git history only.
 
+## [0.0.28] - 2026-11-12
+
+### Changed
+
+- The standalone page shows the Meddleware mark beside "Treasury" in the header (`@meddleware/ui` ^0.1.41), and the browser tab, home-screen and web-manifest icons are the shared brand icon set. The app keeps no icon of its own: `public/favicon.svg` and the `<link rel="icon">` in `index.html` are removed, and `meddlewareApp` (`@meddleware/frontend-config` ^0.0.8, `name: 'Treasury'`) emits `favicon.svg`, `favicon.ico`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png` and `site.webmanifest` and injects the links.
+- The footer's developer link now goes to the Treasury page of the developer site (`https://meddleware.dev/sui/treasury/`, the shell's default for this tool) instead of the Sui landing page.
+- No third-party fonts, scripts, styles, images or analytics: the only outside calls are the Sui node and the optional read-index the tool exists to use. CI workflows set `DO_NOT_TRACK=1`.
+- Internal: `@meddleware/web-utils` ^0.0.4. New tests: the mark in the header, no icon of the app's own, and (over the built `dist/`, run in CI after the build) the icon set once per page, no font file or font host, no third-party load and no origin beyond this site, the explorers and the protocol endpoints.
+
 ## [0.0.27] - 2026-11-07
 
 ### Changed

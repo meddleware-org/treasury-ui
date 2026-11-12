@@ -66,7 +66,7 @@ accounting; DAO is framed as governance.
 | `src/wallet.ts` | `createToolWallet(...)` from `@meddleware/wallet-adapter`; `getSuiClient()` for bare reads. |
 | `src/TreasuryView.vue` | Core tool UI — tab shell (Overview / Accounts / Activity) + status bar. A `section` with its heading; exported from `src/index.ts`. |
 | `src/index.ts` | Library entry — exports `TreasuryView`. |
-| `src/App.vue` | Standalone shell only: `AppToolShell` (title "Treasury", slug `treasury`; the network badge in its `actions` slot) around `<TreasuryView>`. |
+| `src/App.vue` | Standalone shell only: `AppToolShell` (title "Treasury" and the company mark, slug `treasury`, so the docs and developer links are the shell's defaults; the network badge in its `actions` slot) around `<TreasuryView>`. |
 | `src/composables/usePlatformConfig.ts` | Reads `PlatformConfig` → `{ treasury, commissionBps }`. |
 | `src/composables/useTreasury.ts` | Reads the treasury's SUI balance, reactive to the address getter. |
 | `src/composables/useGates.ts` | `AdminCap`-ownership discovery of revenue sources (gates). |
@@ -105,4 +105,4 @@ production build with `VITE_E2E=1` is refused; `!src/e2e*.ts` keeps the stub out
 The build, test and lint plumbing comes from `@meddleware/frontend-config` (the `meddleware` section of `package.json` selects the `chain` Content-Security-Policy profile and
 Lighthouse CI): `meddlewareApp` / `vueTestConfig` / the `vue-app` tsconfig base, and the bins `mw-audit-gate`, `mw-third-party-licenses` (`npm run licenses` / `check:licenses`),
 `mw-check-csp-inline` (`npm run check:csp`, also a Dockerfile step) and `mw-sync` (`npx mw-sync --check` in CI keeps the Dockerfile CSP, `.dockerignore`, PostCSS/stylelint configs, Dependabot config
-and the audit allowlist equal to the templates; `--write` repairs them). Do not copy those scripts back into this repository.
+and the audit allowlist equal to the templates; `--write` repairs them). `meddlewareApp({ name: 'Treasury' })` also emits the brand icon set (favicon, apple-touch-icon, 192/512 icons, `site.webmanifest`) and injects the links, so the app keeps no `public/favicon.*` and no icon `<link>` (`mw-sync --check` fails on the former); `tests/dist.test.ts` (run in CI after the build with `REQUIRE_DIST=1`) checks the icon set, that no font file, font host or third-party load is in `dist/`, and that every origin named is this site, an explorer or a Sui endpoint. Do not copy those scripts back into this repository.

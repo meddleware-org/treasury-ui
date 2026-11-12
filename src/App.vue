@@ -6,8 +6,7 @@ import { network } from './config.js'
 import TreasuryView from './TreasuryView.vue'
 
 const DOCS_URL = import.meta.env.VITE_DOCS_URL || undefined
-// The developer site has no treasury page: its Sui section is the landing point.
-const DEV_URL = import.meta.env.VITE_DEV_URL || 'https://meddleware.dev/sui/'
+const DEV_URL = import.meta.env.VITE_DEV_URL || undefined
 </script>
 
 <template>
