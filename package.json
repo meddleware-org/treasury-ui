@@ -2,7 +2,7 @@
   "name": "@meddleware/treasury-ui",
   "version": "0.0.28",
   "homepage": "https://docs.meddleware.co.uk/treasury/",
-  "description": "Meddleware treasury console \u2014 organisation-level accounting across revenue streams (Sui and beyond). Read-only, desktop-console UI built on @meddleware/ui.",
+  "description": "Meddleware treasury console — organisation-level accounting across revenue streams (Sui and beyond). Read-only, desktop-console UI built on @meddleware/ui.",
   "author": "Meddleware <dev@meddleware.co.uk>",
   "license": "0BSD",
   "repository": {
@@ -65,9 +65,9 @@
   },
   "devDependencies": {
     "@lhci/cli": "^0.16.1",
-    "@meddleware/frontend-config": "^0.0.13",
+    "@meddleware/frontend-config": "^0.0.14",
     "@meddleware/wallet-adapter": "^0.0.22",
-    "@playwright/test": "~1.65.1",
+    "@playwright/test": "~1.64.1",
     "@types/node": "~26.6.5",
     "@vitejs/plugin-vue": "^6.0.9",
     "@vue/eslint-config-typescript": "^14.9.0",
