@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 [Semantic Versioning](https://semver.org/). Before 0.2.0, breaking changes ship as patch releases.
 Releases before 0.0.18 are recorded in the git history only.
 
+## [0.0.29] - 2026-11-18
+
+### Fixed
+
+- The help text on the Activity table's column headings is drawn beside its button and wraps inside its own background. It no longer widens an empty table or adds a horizontal scrollbar (`@meddleware/ui` 0.1.44). New browser tests cover the empty table at 320 and 1280 px.
+- Takes `@meddleware/ui` ^0.1.44 and `@meddleware/frontend-config` ^0.0.15.
+
 ## [0.0.28] - 2026-11-12
 
 ### Changed
