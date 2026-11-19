@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 [Semantic Versioning](https://semver.org/). Before 0.2.0, breaking changes ship as patch releases.
 Releases before 0.0.18 are recorded in the git history only.
 
+## [Unreleased]
+
+- **Security:** the image is built on static-server 0.1.13 (Go 1.26.11), which fixes CVE-2026-97054 (HIGH, `net/http`) found in
+  the 0.1.12 server by the release scan.
+
 ## [0.0.30] - 2026-11-19
 
 - Shared packages for the storage rule (D134): nothing is stored before the visitor acts (`@meddleware/ui` remembers the colour
