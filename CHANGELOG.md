@@ -5,7 +5,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 [Semantic Versioning](https://semver.org/). Before 0.2.0, breaking changes ship as patch releases.
 Releases before 0.0.18 are recorded in the git history only.
 
-## [Unreleased]
+## [0.0.31] - 2026-11-19
 
 - **Security:** the image is built on static-server 0.1.13 (Go 1.26.11), which fixes CVE-2026-97054 (HIGH, `net/http`) found in
   the 0.1.12 server by the release scan.
