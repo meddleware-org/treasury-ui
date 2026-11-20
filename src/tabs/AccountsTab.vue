@@ -24,7 +24,7 @@ const accountProblems = computed(() => distinct(cfgErr.value, balanceErr.value))
       <UiLiveStatus label="Treasury account" :message="cfgLoading ? 'Loading…' : ''" />
       <UiNotice v-for="problem in accountProblems" :key="problem" type="error" :message="problem" />
       <UiStatGrid v-if="config">
-        <UiStatRow label="Commission rate">{{ commissionPct }}</UiStatRow>
+        <UiStatRow label="Platform fee rate">{{ commissionPct }}</UiStatRow>
         <UiStatRow label="Current balance"><UiAmount :value="balance" /></UiStatRow>
         <UiStatRow label="Treasury address" align="left">
           <CopyableAddress :address="config.treasury" :truncate="false">

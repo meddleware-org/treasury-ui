@@ -38,7 +38,7 @@ const passesUsed = computed(() => events.value.filter((e) => e.type === 'AccessC
     <UiPanel title="Treasury Balance">
       <UiStatGrid>
         <UiStatRow label="SUI balance"><UiAmount :value="balance" /></UiStatRow>
-        <UiStatRow label="Commission rate">{{ commissionPct }}</UiStatRow>
+        <UiStatRow label="Platform fee rate">{{ commissionPct }}</UiStatRow>
         <UiStatRow label="Treasury address" align="left">
           <CopyableAddress v-if="config?.treasury" :address="config.treasury" :truncate="false">
             <ExplorerLink :href="suiExplorerUrl('account', config.treasury, explorerNetwork)" :value="config.treasury" :truncate="false" />

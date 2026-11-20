@@ -7,6 +7,7 @@ Releases before 0.0.18 are recorded in the git history only.
 
 ## [Unreleased]
 
+- Wording (copy standard, 2026-11-20): "Platform fee rate" (was "Commission rate"); new page description (Meddleware's own income and balances, in public).
 - CI: `HOME=/root` is set on the browser-test command only, not the whole job, so the runner no longer warns that it cannot read
   `/root/.docker/config.json`.
 - `overrides.chrome-launcher: ^1.2.3`: Lighthouse CI (`@lhci/cli` 0.16.1, the newest) still asks for chrome-launcher 0.13, which pulls
