@@ -106,3 +106,7 @@ The build, test and lint plumbing comes from `@meddleware/frontend-config` (the 
 Lighthouse CI): `meddlewareApp` / `vueTestConfig` / the `vue-app` tsconfig base, and the bins `mw-audit-gate`, `mw-third-party-licenses` (`npm run licenses` / `check:licenses`),
 `mw-check-csp-inline` (`npm run check:csp`, also a Dockerfile step) and `mw-sync` (`npx mw-sync --check` in CI keeps the Dockerfile CSP, `.dockerignore`, PostCSS/stylelint configs, Dependabot config
 and the audit allowlist equal to the templates; `--write` repairs them). `meddlewareApp({ name: 'Treasury' })` also emits the brand icon set (favicon, apple-touch-icon, 192/512 icons, `site.webmanifest`) and injects the links, so the app keeps no `public/favicon.*` and no icon `<link>` (`mw-sync --check` fails on the former); `tests/dist.test.ts` (run in CI after the build with `REQUIRE_DIST=1`) checks the icon set, that no font file, font host or third-party load is in `dist/`, and that every origin named is this site, an explorer or a Sui endpoint. Do not copy those scripts back into this repository.
+
+## Interoperability
+
+- [docs/INTEROP.md](docs/INTEROP.md): the standards this project speaks, what is planned, where to extend it, and what proves each claim.

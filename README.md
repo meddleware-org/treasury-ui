@@ -35,3 +35,7 @@ npm run test:e2e    # builds the e2e variant (a stub chain with data) and runs t
   shared `@meddleware/wallet-adapter` connection. `TreasuryView` self-imports its scoped `qt.css`.
 
 Built on `@meddleware/ui` (shared desktop-console "qt" components) and `@meddleware/design-tokens`.
+
+## Open standards
+
+What this project speaks, what is planned and where you can extend it: [docs/INTEROP.md](docs/INTEROP.md).
