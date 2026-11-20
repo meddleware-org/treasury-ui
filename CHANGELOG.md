@@ -5,7 +5,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 [Semantic Versioning](https://semver.org/). Before 0.2.0, breaking changes ship as patch releases.
 Releases before 0.0.18 are recorded in the git history only.
 
-## [Unreleased]
+## [0.0.32] - 2026-11-20
 
 - Wording (copy standard, 2026-11-20): "Platform fee rate" (was "Commission rate"); new page description (Meddleware's own income and balances, in public).
 - CI: `HOME=/root` is set on the browser-test command only, not the whole job, so the runner no longer warns that it cannot read
