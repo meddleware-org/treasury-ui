@@ -80,6 +80,15 @@ describe('useTreasuryActivity', () => {
     ])
   })
 
+  it('says in plain words that older activity cannot be shown when the node has pruned the history', async () => {
+    listEvents.mockRejectedValueOnce(new Error('requested data below earliest available; lowest available checkpoint is 99'))
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const { error, reload } = useTreasuryActivity()
+    await reload()
+    expect(error.value).toBe('Older activity cannot be shown right now. Try again later.')
+    warn.mockRestore()
+  })
+
   it('drops events of a look-alike package', async () => {
     listEvents.mockResolvedValueOnce({ events: [minted('5', normalizeSuiAddress('0xa1a1'))], hasNextPage: false, endCursor: null })
     const { events, reload } = useTreasuryActivity()

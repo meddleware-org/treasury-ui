@@ -58,6 +58,18 @@ describe('availability messages', () => {
     log.mockRestore()
   })
 
+  it('answer a node that has pruned the history in plain words and log the node\'s answer once, as a warning', async () => {
+    const m = await withRecords(['testnet'])
+    const { EventHistoryPrunedError } = await import('@meddleware/access-gate-client')
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const pruned = new EventHistoryPrunedError({ cause: new Error('requested data below earliest available; lowest available checkpoint is 9') })
+    expect(m.plainFailure('the revenue events', pruned)).toBe(m.HISTORY_PRUNED)
+    m.plainFailure('the revenue events', pruned)
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(m.HISTORY_PRUNED).not.toMatch(/VITE_|operator|deployment|access_gate|indexer|configur|node\b/i)
+    warn.mockRestore()
+  })
+
   it('show distinct messages once', async () => {
     const m = await withRecords(['testnet'])
     expect(m.distinct(m.UNREADABLE, null, m.UNREADABLE, 'x')).toEqual([m.UNREADABLE, 'x'])

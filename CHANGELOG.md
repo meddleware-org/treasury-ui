@@ -5,6 +5,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 [Semantic Versioning](https://semver.org/). Before 0.2.0, breaking changes ship as patch releases.
 Releases before 0.0.18 are recorded in the git history only.
 
+## [Unreleased]
+
+- A node that has pruned the history asked for is answered in plain words ("Older activity cannot be shown right now. Try again later.") and its answer is written to the console once; before, the page said the treasury could not be read. Depends on `@meddleware/access-gate-client` ^0.0.14 (`EventHistoryPrunedError`).
+
 ## [0.0.32] - 2026-11-20
 
 - Wording (copy standard, 2026-11-20): "Platform fee rate" (was "Commission rate"); new page description (Meddleware's own income and balances, in public).

@@ -4,6 +4,7 @@
 //
 // Which networks to suggest comes from the deployment records (access-gate-client's `ACCESS_GATE_DEPLOYMENTS`), never from prose: a network
 // with a recorded `access_gate` deployment is one the treasury can be read on, and a network without one is not offered.
+import { isEventHistoryPruned } from '@meddleware/access-gate-client'
 import { ACCESS_GATE_DEPLOYMENTS } from '@meddleware/access-gate-client/deployments'
 import { errorMessage } from '@meddleware/web-utils'
 
@@ -39,6 +40,9 @@ export const UNREADABLE = 'The treasury cannot be read right now. Try again late
 /** The event history comes from the node alone, which keeps only recent events. */
 export const HISTORY_LIMITED = 'The event index is not available right now, so only recent events are listed. Try again later.'
 
+/** The network no longer keeps events this old and the event index could not supply them: older activity cannot be listed now. */
+export const HISTORY_PRUNED = 'Older activity cannot be shown right now. Try again later.'
+
 const reported = new Set<string>()
 
 /** Log a cause for the developer once per distinct cause (a refresh that fails the same way does not repeat itself). */
@@ -55,6 +59,11 @@ export function logCause(what: string, cause: string, level: 'error' | 'warn' = 
  */
 export function plainFailure(what: string, e: unknown): string {
   if (e instanceof NotDeployedError) return notAvailableOn(e.network)
+  // A public node that has pruned the history asked for is a known condition with its own plain words; the node's answer (the cause) is logged once.
+  if (isEventHistoryPruned(e)) {
+    logCause(`reading ${what} failed: the node has pruned the history`, errorMessage((e as { cause?: unknown }).cause ?? e), 'warn')
+    return HISTORY_PRUNED
+  }
   logCause(`reading ${what} failed`, errorMessage(e))
   return UNREADABLE
 }
