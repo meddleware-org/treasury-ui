@@ -1,6 +1,7 @@
 // What a person reads when the treasury cannot be shown: plain words, the networks to switch to taken from the deployment records.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+// Undo the records mock so one test's networks never leak into the next.
 afterEach(() => {
   vi.doUnmock('@meddleware/access-gate-client/deployments')
   vi.resetModules()
@@ -15,18 +16,22 @@ async function withRecords(networks: string[]) {
   return import('../src/availability.js')
 }
 
+// The plain words, their suggestions of other networks, and what is logged for the developer.
 describe('availability messages', () => {
+  // Offer the other network that has a recorded deployment.
   it('offer the other network that has a recorded deployment', async () => {
     const m = await withRecords(['testnet'])
     expect(m.notAvailableOn('mainnet')).toBe('The treasury is not available on mainnet. Switch to testnet.')
   })
 
+  // Never offer the network the person is on, and drop the suggestion where there is no other.
   it('never offer the network the person is on, and drop the suggestion where there is no other', async () => {
     const m = await withRecords(['testnet'])
     expect(m.otherDeployedNetworks('testnet')).toEqual([])
     expect(m.notAvailableOn('testnet')).toBe('The treasury is not available on testnet.')
   })
 
+  // Follow the records: once mainnet has a deployment it is offered from testnet and from a network without one.
   it('follow the records: once mainnet has a deployment it is offered from testnet and from a network without one', async () => {
     const m = await withRecords(['testnet', 'mainnet'])
     expect(m.notAvailableOn('localnet')).toBe('The treasury is not available on localnet. Switch to testnet or mainnet.')

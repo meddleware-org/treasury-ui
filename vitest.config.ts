@@ -1,3 +1,4 @@
+// Vitest configuration for the unit and component tests (`npm test`): the fleet's shared test settings with the Vue plugin.
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vitest/config'
 import { vueTestConfig } from '@meddleware/frontend-config/vitest'

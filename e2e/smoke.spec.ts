@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test'
 import { offline } from '@meddleware/frontend-config/look'
 import { open } from './open.js'
 
+// Mounts without an uncaught error.
 test('mounts without an uncaught error', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
@@ -17,6 +18,7 @@ test('mounts without an uncaught error', async ({ page }) => {
   expect(errors).toEqual([])
 })
 
+// Shows the chain it reads: balance, commission, treasury address, gates and events.
 test('shows the chain it reads: balance, commission, treasury address, gates and events', async ({ page }) => {
   await open('Accounts')(page)
   await expect(page.getByText('0.20%', { exact: true })).toBeVisible()
@@ -30,6 +32,7 @@ test('shows the chain it reads: balance, commission, treasury address, gates and
   await expect(page.getByText('Epoch 742')).toBeVisible()
 })
 
+// Pages through the events.
 test('pages through the events', async ({ page }) => {
   await open('Activity')(page)
   const rows = page.getByRole('row')

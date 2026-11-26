@@ -9,11 +9,13 @@ const d = accessGateDeployment('testnet')
 const object = (objectId: string, name: string, json: Record<string, unknown>) => ({ objectId, type: `${d.originalId}::access_gate::${name}`, json })
 
 describe('the e2e stub chain parses with the client', () => {
+  // Has a platform config the client accepts.
   it('has a platform config the client accepts', () => {
     const c = parsePlatformConfig({ object: object(d.platformConfigId, 'PlatformConfig', E2E_PLATFORM) }, d.originalId)
     expect(c).toMatchObject({ treasury: E2E_TREASURY, commissionBps: 20n })
   })
 
+  // Has three gates the client accepts, one with a very long name.
   it('has three gates the client accepts, one with a very long name', () => {
     const parsed = Object.entries(e2eGates()).map(([id, json]) => parseGate({ object: object(id, 'Gate', json) }, d.originalId))
     expect(parsed.every((g) => g !== null)).toBe(true)
@@ -21,6 +23,7 @@ describe('the e2e stub chain parses with the client', () => {
     expect(parsed.map((g) => g?.gateId)).toEqual(Object.values(E2E_GATES))
   })
 
+  // Has admin caps the client accepts.
   it('has admin caps the client accepts', () => {
     const cap = parseAdminCap({ object: object('0x' + 'c0'.repeat(32), 'AdminCap', { gate_id: E2E_GATES.studio }) }, d.originalId)
     expect(cap?.gateId).toBe(E2E_GATES.studio)

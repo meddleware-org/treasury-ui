@@ -10,6 +10,7 @@ vi.mock('../src/config.js', () => ({ network: { value: 'testnet' } }))
 import App from '../src/App.vue'
 
 describe('App', () => {
+  // Is the tool shell around the view.
   it('is the tool shell around the view', () => {
     const w = mount(App)
     expect(w.find('h1').text()).toBe('Treasury')
@@ -21,6 +22,7 @@ describe('App', () => {
     expect(w.find('footer').text()).toContain('Meddleware')
   })
 
+  // Shows the company mark beside the name in the header, hidden from assistive technology.
   it('shows the company mark beside the name in the header, hidden from assistive technology', () => {
     const header = mount(App).get('header')
     const mark = header.get('svg.mw-brand-mark')
@@ -28,12 +30,14 @@ describe('App', () => {
     expect(header.text()).toContain('Treasury')
   })
 
+  // Shows the network in the header.
   it('shows the network in the header', () => {
     expect(mount(App).find('header').text()).toContain('testnet')
   })
 })
 
 describe('the brand', () => {
+  // Keeps no icon of its own: the favicon set comes from the shared brand icons.
   it('keeps no icon of its own: the favicon set comes from the shared brand icons', () => {
     expect(existsSync('public/favicon.svg')).toBe(false)
     expect(readdirSync('public').filter((f) => /favicon|apple-touch|icon-/.test(f))).toEqual([])

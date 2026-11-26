@@ -14,6 +14,7 @@ const seasonCss = readFileSync(require.resolve('@meddleware/design-tokens/season
 const declared = (css: string) => new Set([...css.matchAll(/^\s*(--[\w-]+)\s*:/gm)].map((m) => m[1]!))
 const defined = declared(tokenCss + seasonCss)
 
+/** Every source file under `dir` that can hold a stylesheet or a template: `.vue`, `.css` and `.ts`. */
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
     e.isDirectory()

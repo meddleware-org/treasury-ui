@@ -4,7 +4,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 
+// The active network, replaced by a ref so a test can switch it.
 const state = vi.hoisted(() => ({ net: null as unknown as { value: string } }))
+// A config with no real chain behind it.
 vi.mock('../src/config.js', async () => {
   const { ref: vueRef } = await import('vue')
   state.net = vueRef('testnet')
@@ -43,12 +45,15 @@ beforeEach(() => {
   settings.error.value = gates.error.value = treasury.error.value = null
 })
 
+// The view: tabs where the network is offered, an explanation where it is not.
 describe('TreasuryView', () => {
+  // Shows the tabs on a network with a recorded deployment.
   it('shows the tabs on a network with a recorded deployment', () => {
     const w = mount(TreasuryView)
     expect(w.findAll('[role="tab"]').map((t) => t.text())).toEqual(['Overview', 'Accounts', 'Activity'])
   })
 
+  // Explains, with the network to switch to, where no deployment is recorded (and shows no tabs).
   it('explains, with the network to switch to, where no deployment is recorded (and shows no tabs)', () => {
     state.net.value = 'mainnet'
     const w = mount(TreasuryView)
@@ -57,7 +62,9 @@ describe('TreasuryView', () => {
   })
 })
 
+// The overview tab's words and notices.
 describe('Overview', () => {
+  // Spells out "checkpoint" and uses plain labels.
   it('spells out "checkpoint" and uses plain labels', () => {
     const text = mount(OverviewTab).text()
     expect(text).toContain('checkpoint 90000')
@@ -67,6 +74,7 @@ describe('Overview', () => {
     expect(text).toContain('Passes used')
   })
 
+  // Says once, in words, that something could not be read.
   it('says once, in words, that something could not be read', () => {
     const message = 'The treasury cannot be read right now. Try again later.'
     settings.error.value = feed.error.value = message
@@ -74,13 +82,16 @@ describe('Overview', () => {
     expect(w.findAll('[role="alert"]').map((a) => a.text())).toEqual([message])
   })
 
+  // Says when the event list is not the full history.
   it('says when the event list is not the full history', () => {
     feed.notice.value = 'The event index is not available right now, so only recent events are listed. Try again later.'
     expect(mount(OverviewTab).find('[role="status"]').text()).toContain('only recent events are listed')
   })
 })
 
+// The activity tab's column help and notices.
 describe('Activity', () => {
+  // Names the column and explains what a checkpoint is.
   it('names the column and explains what a checkpoint is', () => {
     feed.indexedFromCheckpoint.value = '88000'
     const w = mount(ActivityTab)
@@ -100,6 +111,7 @@ describe('Activity', () => {
   })
 })
 
+// The accounts tab's figures and error state.
 describe('Accounts', () => {
   it('shows the commission as a percentage only', () => {
     const text = mount(AccountsTab).text()

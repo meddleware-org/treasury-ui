@@ -1,3 +1,5 @@
+// Vite configuration: the fleet's shared application settings from @meddleware/frontend-config with the Vue plugin and the page name `Treasury`.
+// `npm run dev` and `npm run build` read it; the end-to-end build is `vite build --mode e2e` (npm run build:e2e).
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import { meddlewareApp } from '@meddleware/frontend-config/vite'

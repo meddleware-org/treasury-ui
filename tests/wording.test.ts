@@ -7,6 +7,7 @@ import { join } from 'node:path'
 const root = join(import.meta.dirname, '..')
 const SPELLING = /MeddleWare/
 
+/** Every `.vue` file under `dir`, found recursively. */
 function vueFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
     e.isDirectory() ? vueFiles(join(dir, e.name)) : e.name.endsWith('.vue') ? [join(dir, e.name)] : [],

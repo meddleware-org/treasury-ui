@@ -1,15 +1,18 @@
+// `shared` is one load for every component that needs it. A network switch resets it and loads again; the load for the NEW network must be a
+// new run, not the one that was already in flight for the old network (whose result the view has discarded).
 import { describe, expect, it, vi } from 'vitest'
 import { shared } from '../src/composables/chainContext.js'
 
-// `shared` is one load for every component that needs it. A network switch resets it and loads again; the load for the NEW network must be a
-// new run, not the one that was already in flight for the old network (whose result the view has discarded).
+// A promise a test settles by hand, to hold a load in flight.
 const deferred = () => {
   let resolve!: (ok: boolean) => void
   const promise = new Promise<boolean>((r) => (resolve = r))
   return { promise, resolve }
 }
 
+// The shared load: one run per epoch, failures not remembered, a network switch starting afresh.
 describe('shared', () => {
+  // Runs once for callers that arrive while a load is in flight, and not again once it succeeded.
   it('runs once for callers that arrive while a load is in flight, and not again once it succeeded', async () => {
     const run = vi.fn(async () => true)
     const s = shared(run, () => {})
@@ -18,6 +21,7 @@ describe('shared', () => {
     expect(run).toHaveBeenCalledTimes(1)
   })
 
+  // Does not remember a failure as done.
   it('does not remember a failure as done', async () => {
     const run = vi.fn(async () => false)
     const s = shared(run, () => {})
@@ -26,6 +30,7 @@ describe('shared', () => {
     expect(run).toHaveBeenCalledTimes(2)
   })
 
+  // Starts a new run for the new network when the network changed while a load was in flight.
   it('starts a new run for the new network when the network changed while a load was in flight', async () => {
     const first = deferred()
     const second = deferred()

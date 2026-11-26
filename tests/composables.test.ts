@@ -1,3 +1,5 @@
+// Tests of the console's composables against the real access-gate client. Only the wallet's client and the deployment record are replaced; the client parses
+// objects and decodes events itself, so a change in its wire formats shows here. Related: src/composables/.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { nextTick, ref } from 'vue'
 import { bcs } from '@mysten/sui/bcs'
@@ -68,7 +70,9 @@ beforeEach(() => {
   deployment.current = { originalId: PKG, publishedAt: PKG, platformConfigId: CFG }
 })
 
+// The event feed: how events are shown, paged and recovered from when the node or the indexer fails.
 describe('useTreasuryActivity', () => {
+  // Shows the consumer of a consume and the recipient of a mint, newest first.
   it('shows the consumer of a consume and the recipient of a mint, newest first', async () => {
     listEvents.mockResolvedValueOnce({ events: [consumed('9'), minted('8')], hasNextPage: false, endCursor: null })
     const { events, error, reload } = useTreasuryActivity()
@@ -80,6 +84,7 @@ describe('useTreasuryActivity', () => {
     ])
   })
 
+  // Says in plain words that older activity cannot be shown when the node has pruned the history.
   it('says in plain words that older activity cannot be shown when the node has pruned the history', async () => {
     listEvents.mockRejectedValueOnce(new Error('requested data below earliest available; lowest available checkpoint is 99'))
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
@@ -89,6 +94,7 @@ describe('useTreasuryActivity', () => {
     warn.mockRestore()
   })
 
+  // Drops events of a look-alike package.
   it('drops events of a look-alike package', async () => {
     listEvents.mockResolvedValueOnce({ events: [minted('5', normalizeSuiAddress('0xa1a1'))], hasNextPage: false, endCursor: null })
     const { events, reload } = useTreasuryActivity()
@@ -96,6 +102,7 @@ describe('useTreasuryActivity', () => {
     expect(events.value).toEqual([])
   })
 
+  // Pages until the limit is reached.
   it('pages until the limit is reached', async () => {
     listEvents
       .mockResolvedValueOnce({ events: [minted('3')], hasNextPage: true, endCursor: 'c1' })
@@ -105,6 +112,7 @@ describe('useTreasuryActivity', () => {
     expect(events.value.map((e) => e.checkpoint)).toEqual(['3', '2'])
   })
 
+  // Says in plain words that the treasury is not offered where no deployment is recorded, and reads nothing.
   it('says in plain words that the treasury is not offered where no deployment is recorded, and reads nothing', async () => {
     deployment.current = null
     const { error, reload } = useTreasuryActivity()
@@ -114,6 +122,7 @@ describe('useTreasuryActivity', () => {
     expect(listEvents).not.toHaveBeenCalled()
   })
 
+  // Lists from the node and says the history is limited when the configured indexer cannot be used, logging the cause.
   it('lists from the node and says the history is limited when the configured indexer cannot be used, logging the cause', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     indexer.url = 'https://indexer.invalid'
@@ -129,6 +138,7 @@ describe('useTreasuryActivity', () => {
     warn.mockRestore()
   })
 
+  // Has no note when no indexer is configured (the node is then the only source, by design).
   it('has no note when no indexer is configured (the node is then the only source, by design)', async () => {
     listEvents.mockResolvedValueOnce({ events: [minted('7')], hasNextPage: false, endCursor: null })
     const { notice, reload } = useTreasuryActivity()
@@ -136,6 +146,7 @@ describe('useTreasuryActivity', () => {
     expect(notice.value).toBeNull()
   })
 
+  // Tells a person the treasury cannot be read right now and logs the cause for the developer.
   it('tells a person the treasury cannot be read right now and logs the cause for the developer', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     listEvents.mockRejectedValueOnce(new Error('503 upstream connect error'))
@@ -147,7 +158,9 @@ describe('useTreasuryActivity', () => {
   })
 })
 
+// The platform settings read from the recorded PlatformConfig object.
 describe('usePlatformConfig', () => {
+  // Reads treasury and commission from the recorded PlatformConfig.
   it('reads treasury and commission from the recorded PlatformConfig', async () => {
     getObject.mockResolvedValueOnce(configObject)
     const { config, reload } = usePlatformConfig()
@@ -156,6 +169,7 @@ describe('usePlatformConfig', () => {
     expect(config.value).toEqual({ treasury: TREASURY, commissionBps: 20 })
   })
 
+  // Refuses an object that is not this package\.
   it('refuses an object that is not this package\'s PlatformConfig', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     getObject.mockResolvedValueOnce({ object: { ...configObject.object, type: `${normalizeSuiAddress('0xa1a1')}::access_gate::PlatformConfig` } })
@@ -186,7 +200,9 @@ const gateJson = (over: Record<string, unknown>) => ({
   ...over,
 })
 
+// The gates the treasury administers, found through its AdminCaps.
 describe('useGates', () => {
+  // Lists the treasury\.
   it('lists the treasury\'s gates across pages and leaves out one that cannot be read', async () => {
     const cap = (id: string, gate: string) => ({ objectId: id, type: `${PKG}::access_gate::AdminCap`, json: { gate_id: gate } })
     listOwnedObjects
@@ -206,10 +222,12 @@ describe('useGates', () => {
   })
 })
 
+// The treasury balance, which follows the address as it becomes known.
 describe('useTreasury', () => {
   const flush = () => new Promise((r) => setTimeout(r, 0))
   const bal = (total: string, coins: string) => ({ balance: { coinType: '0x2::sui::SUI', balance: total, coinBalance: coins, addressBalance: String(BigInt(total) - BigInt(coins)) } })
 
+  // Counts coin objects and the address balance.
   it('counts coin objects and the address balance', async () => {
     getBalance.mockResolvedValue(bal('15', '10'))
     const { balance, error } = useTreasury(() => TREASURY)
@@ -219,6 +237,7 @@ describe('useTreasury', () => {
     expect(error.value).toBeNull()
   })
 
+  // Keeps the newest address when an older read resolves last.
   it('keeps the newest address when an older read resolves last', async () => {
     let resolveOld: (v: unknown) => void = () => {}
     getBalance.mockImplementationOnce(() => new Promise((r) => (resolveOld = r))).mockResolvedValueOnce(bal('2', '2'))
@@ -233,6 +252,7 @@ describe('useTreasury', () => {
     expect(loading.value).toBe(false)
   })
 
+  // Clears while the address is unknown, and on a failed read.
   it('clears while the address is unknown, and on a failed read', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     getBalance.mockResolvedValueOnce(bal('5', '5')).mockRejectedValueOnce(new Error('unavailable'))
