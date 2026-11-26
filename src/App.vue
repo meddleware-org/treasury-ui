@@ -15,7 +15,6 @@ const DEV_URL = import.meta.env.VITE_DEV_URL || undefined
 </script>
 
 <template>
-  <!-- The standalone page: the shell around the console. -->
   <AppToolShell title="Treasury" slug="treasury" :docs-url="DOCS_URL" :dev-url="DEV_URL">
     <!-- The header's action slot carries the network badge. -->
     <template #actions>

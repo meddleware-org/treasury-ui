@@ -52,7 +52,6 @@ const { epoch } = useEpoch()
 </script>
 
 <template>
-  <!-- One labelled region: the title names it for assistive technology. -->
   <section class="treasury-view" aria-labelledby="treasury-title">
     <!-- The emoji is decoration, hidden from assistive technology. -->
     <h2 id="treasury-title"><span aria-hidden="true">🏦</span> Meddleware Treasury</h2>

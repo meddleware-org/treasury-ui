@@ -31,7 +31,6 @@ const accountProblems = computed(() => distinct(cfgErr.value, balanceErr.value))
 </script>
 
 <template>
-  <!-- Two panels stacked: the account, then its revenue sources. -->
   <div class="accounts">
     <!-- The treasury account: fee rate, balance and address. -->
     <UiPanel title="Sui Treasury Account">

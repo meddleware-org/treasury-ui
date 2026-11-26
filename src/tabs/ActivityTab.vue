@@ -33,7 +33,6 @@ const eventLabel: Record<TreasuryEvent['type'], string> = {
 </script>
 
 <template>
-  <!-- The event log. -->
   <UiPanel title="Revenue Events">
     <!-- A bar with an explanation of where the list starts and the refresh button. -->
     <p class="bar">

@@ -49,7 +49,6 @@ const passesUsed = computed(() => events.value.filter((e) => e.type === 'AccessC
 </script>
 
 <template>
-  <!-- A grid of panels that wraps to the width. -->
   <div class="overview">
     <!-- One error notice per distinct problem, across the whole grid. -->
     <UiNotice v-for="problem in problems" :key="problem" class="wide" type="error" :message="problem" />
